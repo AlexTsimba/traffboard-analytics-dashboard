@@ -1,4 +1,3 @@
-/* eslint-disable ts/no-require-imports */
 import type { Config } from 'tailwindcss';
 
 const config = {

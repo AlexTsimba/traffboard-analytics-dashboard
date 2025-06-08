@@ -3,7 +3,7 @@
 ## Context and Technical Stack
 
 <tech_stack_context>
-- **Repository**: https://github.com/AlexTsimba/traffboard
+- **Repository**: https://github.com/AlexTsimba/traffboard-analytics-dashboard
 - **Location**: /Users/fristname_lastname/Documents/Obsidian/Traffboard
 - **Stack**: Next.js 15, React 19, TypeScript, Tailwind CSS, shadcn/ui, Vitest, Playwright
 - **Infrastructure**: Turborepo monorepo, PostgreSQL, Docker, Digital Ocean, pnpm
