@@ -12,27 +12,10 @@ services:
       - DATABASE_URL=postgresql://postgres:password@db:5432/traffboard
     depends_on:
       - db
-      - api
     volumes:
       - ./apps/web:/app/apps/web
       - /app/apps/web/node_modules
     command: pnpm dev --filter=@traffboard/web
-
-  api:
-    build:
-      context: .
-      dockerfile: apps/api/Dockerfile
-    ports:
-      - "4000:4000"
-    environment:
-      - NODE_ENV=development
-      - DATABASE_URL=postgresql://postgres:password@db:5432/traffboard
-    depends_on:
-      - db
-    volumes:
-      - ./apps/api:/app/apps/api
-      - /app/apps/api/node_modules
-    command: pnpm dev --filter=@traffboard/api
 
   db:
     image: postgres:16-alpine

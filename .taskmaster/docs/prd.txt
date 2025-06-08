@@ -1,16 +1,18 @@
-# Traffboard Analytics Dashboard - Product Requirements Document
+# Traffboard Analytics Dashboard - Product Requirements Document (Revised)
 
 ## Project Overview
 
 Transform the Next.js SaaS Boilerplate (https://github.com/ixartz/SaaS-Boilerplate) into Traffboard, a comprehensive analytics dashboard for affiliate marketing and player conversion tracking. This project requires 90% automation using Infrastructure MCPs (Digital Ocean, PostgreSQL, GitHub Actions) with intelligent cleanup and modernization.
 
-## Technical Architecture
+## Technical Architecture (REVISED)
 
-### Monorepo Structure (Turborepo)
+### Simplified Monorepo Structure (Turborepo)
 ```
 apps/
-├── web/              # Next.js 15 frontend + API routes
-└── api/              # Node.js backend (GraphQL + Fastify)
+└── web/              # Next.js 15 App Router (Full Stack)
+    ├── app/          # App Router pages & API routes
+    ├── components/   # React Server & Client Components
+    └── lib/          # Database, auth, utilities
 packages/
 ├── database/         # Drizzle schema + migrations  
 ├── auth/            # 2FA authentication system
@@ -19,15 +21,32 @@ packages/
 └── types/           # Shared TypeScript definitions
 ```
 
-### Backend Infrastructure  
-- **Frontend**: Next.js 15 App Router with TypeScript
-- **Backend**: Node.js with GraphQL + Fastify (if necessary)
-- **Database**: PostgreSQL (Digital Ocean Managed Database)
+### **ARCHITECTURE CHANGE: App Router Full Stack (No Separate Node.js Backend)**
+- **Frontend + Backend**: Next.js 15 App Router with Server Components
+- **API Layer**: App Router API routes for auth and external integrations
+- **Database**: Direct Drizzle queries from Server Components
 - **ORM**: Drizzle for type-safe database operations
 - **Package Manager**: pnpm only (no npm)
-- **Containerization**: Docker for consistent deployment
+- **Containerization**: Single Docker container (Next.js only)
+
+**Benefits of App Router Architecture:**
+- **Simplified deployment**: Single service instead of frontend + backend
+- **Better performance**: Server Components query database directly
+- **Type safety**: End-to-end TypeScript from database to UI
+- **SSR/ISR**: Perfect for analytics dashboards with cached reports
+- **Reduced complexity**: No GraphQL layer needed
 
 ### Security Requirements
+
+#### **NEW: Anti-Web Scraping Protection (Low Priority)**
+- **Repository Privacy**: Private GitHub repository
+- **Authentication Wall**: Zero public pages (everything behind login)
+- **Bot Detection**: User-agent filtering, rate limiting, automation detection
+- **Session Security**: Fingerprinting, activity pattern validation
+- **Infrastructure Protection**: IP whitelisting, VPC isolation
+- **Monitoring**: Intrusion detection and alerting
+
+#### Standard Security
 - **Database**: Encrypted connections with `sslmode=require`
 - **Authentication**: 2FA with QR codes, JWT with refresh tokens
 - **API Security**: Input validation, rate limiting, CORS configuration
@@ -44,7 +63,7 @@ packages/
 - Partner C: Missing required fields
 - Partner D: Different date formats
 
-**Solution**: Partner Settings Engine
+**Solution**: Partner Settings Engine (Server Components + API Routes)
 
 ```typescript
 interface PartnerSettings {
@@ -60,15 +79,15 @@ interface PartnerSettings {
 }
 ```
 
-### Data Processing Pipeline
-1. **Raw Data Ingestion**: Google Sheets → Staging table
-2. **Partner Lookup**: Identify partner from data source
-3. **Field Mapping**: Apply partner-specific transformations
+### **REVISED: App Router Data Processing Pipeline**
+1. **Raw Data Ingestion**: Google Sheets → API Route → Staging table
+2. **Partner Lookup**: Server Action identifies partner from data source
+3. **Field Mapping**: Server Component applies partner-specific transformations
 4. **Validation**: Ensure required fields and data types
-5. **Normalization**: Convert to unified database schema
-6. **Insert**: Clean data → Analytics tables
+5. **Normalization**: Convert to unified database schema via Drizzle
+6. **Display**: Server Component renders analytics with ISR caching
 
-### Database Schema
+### Database Schema (Unchanged)
 ```sql
 -- Partner configuration
 partners_settings (
@@ -102,14 +121,14 @@ conversions (
 
 ## Authentication System Requirements
 
-### 2FA Implementation
+### 2FA Implementation (App Router)
 - **QR Code Generation**: TOTP standard (compatible with Google Authenticator, Authy)
 - **Database Storage**: User credentials, 2FA secrets, session tokens
-- **User Journey**: Simple registration → Email verification → QR setup → Dashboard access
-- **Session Management**: JWT tokens with refresh rotation
-- **Security**: Rate limiting, account lockout, secure password requirements
+- **User Journey**: Registration → Email verification → QR setup → Dashboard access
+- **Session Management**: NextAuth.js with database sessions
+- **Security**: Middleware-based rate limiting, account lockout, secure passwords
 
-### User Management
+### User Management (Unchanged)
 ```sql
 users (
   id SERIAL PRIMARY KEY,
@@ -139,6 +158,12 @@ sessions (
 - **Charts**: shadcn charts library for all visualizations
 - **Forms**: Standard shadcn form components with validation
 
+### **NEW: Server Component Architecture**
+- **Server Components**: Data fetching and rendering
+- **Client Components**: Interactive charts and filters
+- **Streaming**: Progressive loading for large datasets
+- **ISR**: Cached analytics reports for performance
+
 ### Design Principles
 - Focus on functionality over aesthetics
 - Responsive design for desktop/tablet
@@ -147,19 +172,19 @@ sessions (
 
 ## Infrastructure Requirements
 
-### Docker Configuration
-- **Application Container**: Next.js application with built-in API routes
+### **REVISED: Single Container Docker Configuration**
+- **Application Container**: Next.js App Router (full stack)
 - **Database**: Digital Ocean Managed PostgreSQL (external)
 - **Development**: Hot reload and debugging capabilities
 - **Production**: Optimized build with health checks
 
-### Digital Ocean Setup
-- **Compute**: Droplet cluster with load balancing
+### Digital Ocean Setup (Simplified)
+- **Compute**: Single droplet deployment (scalable vertically)
 - **Database**: Managed PostgreSQL cluster with backups
 - **Storage**: Spaces for static assets and backups
 - **Networking**: VPC with security groups and firewall rules
 
-### CI/CD Pipeline
+### CI/CD Pipeline (Unchanged)
 - **GitHub Actions**: Automated testing, building, and deployment
 - **Container Registry**: Digital Ocean Container Registry
 - **Deployment Strategy**: Blue-green deployments with rollback capability
@@ -168,22 +193,22 @@ sessions (
 ## Fast-First Deployment Strategy
 
 ### Phase 1: MVP (30 minutes) → Live URL
-- Clone SaaS boilerplate
+- Clone SaaS boilerplate and cleanup Node.js backend
+- Convert to App Router with Server Components
 - Basic dashboard with mock data
-- Deploy to Digital Ocean
-- SSL + domain configuration
+- Deploy single container to Digital Ocean
 
 ### Phase 2: Secure Foundation (1 hour)
 - PostgreSQL setup with encrypted connections
-- 2FA authentication system
+- NextAuth.js 2FA authentication system
+- Anti-scraping middleware implementation
 - Basic partner settings interface
-- Security middleware implementation
 
 ### Phase 3: Data Pipeline (2 hours)
-- Partner normalization engine
-- CSV import with validation
-- Real analytics data integration
-- Error handling and monitoring
+- Partner normalization engine (Server Actions)
+- CSV import with validation (API Routes)
+- Real analytics data integration (Server Components)
+- ISR caching for performance
 
 ### Phase 4: Production Features
 - Advanced analytics dashboards
@@ -195,37 +220,66 @@ sessions (
 All tasks must be ≤3/10 complexity. Auto-decompose tasks >3 into ≤10 subtasks.
 Target: <2 hours per task with complete testing and validation.
 
+## **REVISED: Task Updates Required**
+
+### Tasks to Update/Remove:
+1. **Remove**: "Develop Node.js Backend Structure" 
+2. **Update**: "Develop Next.js Frontend Structure" → "Convert to App Router Full Stack"
+3. **Update**: "Implement API Routes" → "Implement Server Components & API Routes"
+4. **Add**: "Implement Anti-Scraping Security" (Low Priority)
+5. **Update**: "Configure Docker Environment" → "Single Container Docker Setup"
+
+### **NEW: Anti-Scraping Security Task (Low Priority)**
+```typescript
+interface AntiScrapingTask {
+  id: 13,
+  title: "Implement Anti-Web Scraping Protection",
+  description: "Implement comprehensive anti-scraping measures including bot detection, rate limiting, and session security",
+  priority: "low",
+  dependencies: [4, 7], // Auth + API routes
+  complexity: 3,
+  subtasks: [
+    "Repository privacy configuration",
+    "Authentication wall middleware",
+    "Bot detection and user-agent filtering", 
+    "Rate limiting implementation",
+    "Session fingerprinting security",
+    "Intrusion detection monitoring"
+  ]
+}
+```
+
 ## Additional Development Speed Suggestions
 
 ### 🚀 Rapid Development Strategies
 
-**1. Data-First Approach:**
-- Generate components directly from CSV structure
-- Auto-create database schema from existing data
-- Build type-safe APIs based on actual data patterns
-- Create realistic test data from production patterns
+**1. Server Component-First Approach:**
+- Direct database queries from Server Components
+- ISR for cached analytics dashboards
+- Streaming for progressive data loading
+- Client Components only for interactivity
 
 **2. Template-Driven Development:**
-- Start with working analytics dashboard template
+- Start with working App Router analytics template
 - Pre-populate with actual conversion data structure
-- Use battle-tested component patterns
+- Use Server Component patterns for data fetching
 - Implement responsive design from the start
 
 **3. Infrastructure-as-Code Acceleration:**
-- Docker compose for instant local environment
+- Single container Docker compose for instant environment
 - GitHub Actions templates for immediate CI/CD
 - Digital Ocean terraform for reproducible infrastructure
 - Database migrations with rollback capabilities
 
 **4. Performance-First Implementation:**
 - Server Components for zero client-side data fetching
-- Pre-computed aggregation tables for dashboard speed
+- ISR caching for dashboard performance
 - Optimistic UI updates for better user experience
 - Edge caching strategies for static analytics
 
 **5. Testing Automation:**
 - Generate tests from actual CSV data patterns
-- Create visual regression tests for charts
+- Visual regression tests for charts
 - Performance tests for data-heavy operations
 - E2E tests covering complete user workflows
 
@@ -235,12 +289,12 @@ Target: <2 hours per task with complete testing and validation.
 ```bash
 # Single command setup
 npm run setup:dev
-# - Clones SaaS boilerplate
-# - Removes unnecessary features
-# - Sets up Turborepo structure
-# - Configures Docker environment
+# - Removes Node.js backend from boilerplate
+# - Converts to App Router structure
+# - Sets up simplified Turborepo structure
+# - Configures single container Docker
 # - Seeds database with test data
-# - Starts development servers
+# - Starts development server
 ```
 
 **Smart Code Generation:**
@@ -249,7 +303,7 @@ npm run setup:dev
 npm run generate:analytics-feature --csv conversions.csv
 # - Creates database schema
 # - Generates TypeScript types
-# - Creates API routes
+# - Creates Server Components
 # - Builds dashboard components
 # - Writes comprehensive tests
 ```
@@ -258,7 +312,7 @@ npm run generate:analytics-feature --csv conversions.csv
 ```bash
 # One-command deployment
 npm run deploy:production
-# - Builds optimized containers
+# - Builds optimized single container
 # - Provisions Digital Ocean infrastructure
 # - Deploys with zero downtime
 # - Sets up monitoring and alerts
@@ -266,95 +320,42 @@ npm run deploy:production
 
 ## Performance Requirements
 
-### Frontend Performance
+### Frontend Performance (App Router)
 - **Load Time**: < 2 seconds initial page load
-- **Interactivity**: < 500ms filter response time
-- **Bundle Size**: Optimized with Turbopack tree-shaking
+- **Interactivity**: < 500ms filter response time (Client Components)
+- **Server Components**: Instant rendering with database data
+- **ISR**: Cached analytics with 1-hour revalidation
 - **Lighthouse Score**: 90+ across all metrics
 
-### Backend Performance
-- **API Response**: < 200ms for standard queries
-- **Database Queries**: Optimized with indexes and caching
+### Backend Performance (Server Components)
+- **Database Queries**: < 200ms for standard aggregations
+- **Server Component Rendering**: < 100ms for cached reports
 - **Concurrent Users**: Support 100+ simultaneous users
 - **Data Processing**: Handle 1M+ records efficiently
 
-### Infrastructure Scalability
-- **Simplified Scaling**: Single droplet vertical scaling initially
+### Infrastructure Scalability (Simplified)
+- **Single Container**: Vertical scaling initially
 - **Database**: Connection pooling and read optimization
-- **Caching**: Next.js built-in caching strategies
+- **ISR Caching**: Next.js built-in caching strategies
 - **CDN**: Static asset delivery optimization
-
-## Speed Optimization & Development Acceleration Requirements
-
-### Auto-Generation Tools (Must Implement)
-
-**Database Type Generation:**
-- Auto-generate TypeScript types from Drizzle schema
-- Create migration files from schema changes
-- Generate seed data for development and testing
-
-**Component Generation:**
-- Auto-generate dashboard components from CSV data structure
-- Create chart components with proper TypeScript interfaces
-- Generate filter components with state management
-- Auto-create form components with validation
-
-**API Generation:**
-- Generate type-safe API routes from database schema
-- Create CRUD operations for all entities
-- Auto-generate API documentation
-- Generate client-side API functions with proper typing
-
-### Development Speed Multipliers
-
-**Template Accelerators:**
-- Pre-built analytics dashboard templates
-- Chart component library with data binding
-- Filter system templates with multi-dimensional state
-- Export functionality templates with various formats
-
-**Code Scaffolding:**
-- Complete feature generation (analytics modules)
-- CRUD operation templates for any entity
-- Authentication system scaffolding
-- Dashboard page templates with routing
-
-**Performance Optimization:**
-- Bundle analysis and optimization tools
-- Database query optimization suggestions
-- Image and asset optimization pipelines
-- Font loading optimization
-
-### Task Complexity Management (Critical Requirement)
-
-**COMPLEXITY REQUIREMENT: All tasks must be ≤3/10 complexity.**
-
-**Auto-Decomposition Rules:**
-- TaskMaster must automatically decompose any task >3 complexity
-- Maximum 10 subtasks per parent task
-- Each subtask must be completable in <2 hours
-- Dependencies should be flattened to ≤3 levels deep
-
-**Validation Requirements:**
-- All generated tasks must pass complexity validation
-- Tasks with >5 acceptance criteria must be subdivided
-- Infrastructure tasks get priority in dependency ordering
-- Testing tasks must be bundled with implementation tasks
-
-**Progress Tracking:**
-- Real-time complexity scoring for all tasks
-- Duration estimation vs actual tracking
-- Bottleneck identification and auto-resolution
-- Success rate monitoring per task complexity level
 
 ## Security Requirements
 
-### Authentication & Authorization
-- **Auth System**: Simplified JWT-based authentication
+### Authentication & Authorization (App Router)
+- **Auth System**: NextAuth.js with database sessions
 - **Role Management**: Admin/User permission levels
-- **Session Security**: Secure cookie handling and CSRF protection
+- **Session Security**: Middleware-based security and CSRF protection
 
-### Data Protection
+### **NEW: Anti-Scraping Protection (Comprehensive)**
+- **Repository Security**: Private GitHub repository
+- **Zero Public Access**: Everything behind authentication wall
+- **Bot Detection**: Advanced user-agent and behavior analysis
+- **Rate Limiting**: Per-IP and per-user request limiting
+- **Session Security**: Fingerprinting and activity validation
+- **Infrastructure**: VPC isolation and IP whitelisting
+- **Monitoring**: Real-time intrusion detection and alerting
+
+### Data Protection (Unchanged)
 - **Database Security**: Encrypted connections and access controls
 - **API Security**: Rate limiting and input validation
 - **Infrastructure**: VPC isolation and firewall rules
@@ -362,17 +363,19 @@ npm run deploy:production
 
 ## Migration Strategy
 
-### Boilerplate Cleanup
-- **Remove**: Clerk auth, Stripe payments, Sentry monitoring, i18n
+### **REVISED: Boilerplate Cleanup (App Router Focus)**
+- **Remove**: Node.js backend, GraphQL layer, Clerk auth, Stripe payments, Sentry monitoring, i18n
+- **Convert**: Pages Router → App Router with Server Components
 - **Keep**: Next.js structure, Tailwind config, testing setup
-- **Transform**: Update to analytics-focused components
+- **Transform**: Update to analytics-focused Server Components
 
-### Data Migration
+### Data Migration (Unchanged)
 - **Schema Design**: Based on provided CSV structures
-- **Import Tools**: Automated CSV to PostgreSQL ingestion
+- **Import Tools**: Automated CSV to PostgreSQL ingestion via API Routes
 - **Validation**: Data integrity checks and error reporting
 
-### Deployment Pipeline
+### Deployment Pipeline (Simplified)
+- **Single Container**: Simplified Docker deployment
 - **Staging Environment**: Complete testing environment
 - **Production Deployment**: Automated with rollback capability
 - **Monitoring**: Health checks and performance metrics
@@ -381,13 +384,13 @@ npm run deploy:production
 
 ### Technical Metrics
 - **Automation Level**: 90%+ of tasks automated via MCPs
-- **Build Time**: < 5 minutes for full pipeline
+- **Build Time**: < 3 minutes for full pipeline (single container)
 - **Test Coverage**: 80%+ unit and integration tests
 - **Deployment Success**: 99%+ successful deployments
 
-### Performance Metrics
-- **Dashboard Load Time**: < 2 seconds
-- **API Response Time**: < 200ms average
+### Performance Metrics (App Router)
+- **Server Component Rendering**: < 100ms
+- **ISR Cache Hit Rate**: > 90%
 - **Database Query Performance**: < 100ms for standard operations
 - **Uptime**: 99.9% availability target
 
@@ -395,50 +398,50 @@ npm run deploy:production
 - **Code Quality**: ESLint compliance with zero errors
 - **TypeScript Coverage**: 100% type safety
 - **Documentation**: Complete API and component documentation
-- **Maintainability**: Modular architecture with clear separation of concerns
+- **Maintainability**: Modular App Router architecture
 
 ## Timeline & Milestones
 
 ### Week 1: Foundation & Infrastructure
-- Project setup and boilerplate cleanup
-- PostgreSQL schema and Docker configuration
+- Project setup and boilerplate cleanup (App Router conversion)
+- PostgreSQL schema and single container Docker
 - Digital Ocean infrastructure provisioning
 - CI/CD pipeline establishment
 
-### Week 2: Backend & Data Pipeline
-- Node.js API development
+### Week 2: App Router & Data Pipeline
+- Server Components development
 - Database integration and migrations
-- Google Sheets data pipeline
+- Google Sheets data pipeline (API Routes)
 - Testing and validation systems
 
 ### Week 3: Dashboard Development
-- Analytics components and visualizations
-- Filter systems and state management
-- Responsive UI implementation
+- Analytics Server Components and visualizations
+- Client Component filters and interactivity
+- ISR caching implementation
 - Performance optimization
 
-### Week 4: Deployment & Optimization
+### Week 4: Deployment & Security
 - Production deployment
+- Anti-scraping security implementation
 - Performance tuning and monitoring
-- Security hardening
 - Documentation and handover
 
 ## Risk Assessment
 
-### Technical Risks
-- **Complexity**: Managing multi-container architecture
-- **Performance**: Large dataset query optimization
-- **Integration**: Google Sheets API rate limits
-- **Migration**: Data integrity during CSV imports
+### Technical Risks (Updated)
+- **Migration Complexity**: Pages Router → App Router conversion
+- **Performance**: Large dataset Server Component rendering
+- **Caching**: ISR cache invalidation strategies
+- **Security**: Anti-scraping effectiveness
 
-### Infrastructure Risks
-- **Scalability**: Database performance under load
-- **Availability**: Single points of failure
-- **Security**: API and database vulnerabilities
+### Infrastructure Risks (Simplified)
+- **Scalability**: Single container vertical scaling limits
+- **Availability**: Database performance under load
+- **Security**: Comprehensive anti-scraping protection
 - **Cost**: Digital Ocean resource optimization
 
 ### Mitigation Strategies
 - **Monitoring**: Comprehensive logging and alerting
 - **Backup**: Automated database backups and disaster recovery
-- **Testing**: Extensive automated testing coverage
+- **Testing**: Extensive automated testing coverage including security tests
 - **Documentation**: Clear operational procedures and troubleshooting guides
