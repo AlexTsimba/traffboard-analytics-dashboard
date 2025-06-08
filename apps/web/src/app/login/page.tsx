@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -28,6 +28,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [requiresTwoFactor, setRequiresTwoFactor] = useState(false);
   const [error, setError] = useState("");
+  const [remainingCooldown, setRemainingCooldown] = useState(0);
   const { login } = useAuth();
   const router = useRouter();
 
@@ -35,6 +36,20 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "", twoFactorCode: "" },
   });
+
+  // Cooldown timer effect
+  useEffect(() => {
+    if (remainingCooldown > 0) {
+      const timer = setTimeout(() => {
+        setRemainingCooldown(remainingCooldown - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [remainingCooldown]);
+
+  const startCooldown = () => {
+    setRemainingCooldown(30);
+  };
 
   const onSubmit = async (data: LoginCredentials) => {
     setIsLoading(true);
@@ -59,6 +74,11 @@ export default function LoginPage() {
         router.push("/");
       } else {
         setError(result.error || "Login failed");
+        
+        // Start cooldown if rate limited
+        if (response.status === 429) {
+          startCooldown();
+        }
       }
     } catch {
       setError("Network error occurred");
@@ -73,7 +93,7 @@ export default function LoginPage() {
         <CardHeader>
           <CardTitle>Sign In</CardTitle>
           <CardDescription>
-            Enter your credentials to access Traffboard Analytics
+            Enter your credentials to access Traffboard
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -127,8 +147,23 @@ export default function LoginPage() {
                 <div className="text-red-600 text-sm">{error}</div>
               )}
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Signing in..." : "Sign In"}
+              {remainingCooldown > 0 && (
+                <div className="text-orange-600 text-sm">
+                  Too many attempts. Please wait {remainingCooldown} seconds.
+                </div>
+              )}
+
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={isLoading || remainingCooldown > 0}
+              >
+                {remainingCooldown > 0 
+                  ? `Wait ${remainingCooldown}s` 
+                  : isLoading 
+                    ? "Signing in..." 
+                    : "Sign In"
+                }
               </Button>
             </form>
           </Form>
