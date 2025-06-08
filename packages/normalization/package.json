@@ -1,0 +1,13 @@
+{
+  "name": "@traffboard/normalization",
+  "version": "0.1.0",
+  "main": "index.ts",
+  "types": "index.ts",
+  "dependencies": {
+    "@traffboard/database": "workspace:*",
+    "zod": "^3.25.56",
+    "date-fns": "^4.1.0",
+    "drizzle-orm": "^0.35.1",
+    "typescript": "^5.6.3"
+  }
+}

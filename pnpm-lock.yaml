@@ -51,6 +51,9 @@ importers:
       '@traffboard/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@traffboard/normalization':
+        specifier: workspace:*
+        version: link:../../packages/normalization
       '@traffboard/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -231,6 +234,24 @@ importers:
       typescript:
         specifier: ^5.6.3
         version: 5.8.3
+
+  packages/normalization:
+    dependencies:
+      '@traffboard/database':
+        specifier: workspace:*
+        version: link:../database
+      date-fns:
+        specifier: ^4.1.0
+        version: 4.1.0
+      drizzle-orm:
+        specifier: ^0.35.1
+        version: 0.35.3(@electric-sql/pglite@0.2.17)(@libsql/client-wasm@0.15.8)(@types/pg@8.15.4)(@types/react@19.1.6)(pg@8.16.0)(postgres@3.4.7)(react@19.1.0)
+      typescript:
+        specifier: ^5.6.3
+        version: 5.8.3
+      zod:
+        specifier: ^3.25.56
+        version: 3.25.56
 
   packages/partners:
     dependencies:
@@ -2079,6 +2100,9 @@ packages:
   data-view-byte-offset@1.0.1:
     resolution: {integrity: sha512-BS8PfmtDGnrgYdOonGZQdLZslWIeCGFP9tpan0hi1Co2Zr2NKADsvGYA8XxuG/4UWgJ6Cjtv+YJnB6MM69QGlQ==}
     engines: {node: '>= 0.4'}
+
+  date-fns@4.1.0:
+    resolution: {integrity: sha512-Ukq0owbQXxa/U3EGtsdVBkR1w7KOQ5gIBqdH2hkvknzZPYvBxb/aa6E8L7tmjFtkwZBu3UXBbjIgPo/Ez4xaNg==}
 
   debug@3.2.7:
     resolution: {integrity: sha512-CFjzYYAi4ThfiQvizrFQevTTXHtnCqWfe7x1AhgEscTz6ZbLbfoLRLPugTQyBth6f8ZERVUSyWHFD/7Wu4t1XQ==}
@@ -5881,6 +5905,8 @@ snapshots:
       call-bound: 1.0.4
       es-errors: 1.3.0
       is-data-view: 1.0.2
+
+  date-fns@4.1.0: {}
 
   debug@3.2.7:
     dependencies:

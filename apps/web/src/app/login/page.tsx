@@ -45,6 +45,7 @@ export default function LoginPage() {
       }, 1000);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [remainingCooldown]);
 
   const startCooldown = () => {

@@ -25,6 +25,7 @@
     "@tanstack/react-table": "^8.20.5",
     "@traffboard/auth": "workspace:*",
     "@traffboard/database": "workspace:*",
+    "@traffboard/normalization": "workspace:*",
     "@traffboard/types": "workspace:*",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
