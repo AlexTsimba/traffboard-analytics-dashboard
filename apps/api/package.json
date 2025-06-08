@@ -6,7 +6,7 @@
     "dev": "tsx src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "lint": "eslint .",
+    "lint": "eslint . --ignore-pattern dist",
     "test": "vitest run",
     "type-check": "tsc --noEmit"
   },
