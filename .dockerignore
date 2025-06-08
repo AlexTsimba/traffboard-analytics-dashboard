@@ -1,0 +1,19 @@
+node_modules
+.next
+.git
+.env*
+.DS_Store
+*.log
+.turbo
+coverage
+.nyc_output
+Dockerfile
+docker-compose.yml
+README.md
+
+# AI Assistant folders and files
+.roo
+.cursor
+.windsurfrules
+.roomodes
+CLAUDE.md

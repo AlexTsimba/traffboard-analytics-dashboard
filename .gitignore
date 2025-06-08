@@ -27,3 +27,10 @@ node_modules/
 # Task files
 tasks.json
 tasks/ 
+
+# AI Assistant folders and files
+.roo/
+.cursor/
+.windsurfrules
+.roomodes
+CLAUDE.md
