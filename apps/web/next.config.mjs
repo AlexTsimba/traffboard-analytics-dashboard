@@ -2,7 +2,7 @@
 const nextConfig = {
   output: 'standalone',
   eslint: {
-    dirs: ['.'],
+    ignoreDuringBuilds: false,
   },
   poweredByHeader: false,
   reactStrictMode: true,
