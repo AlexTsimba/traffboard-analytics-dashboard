@@ -12,5 +12,11 @@
   },
   "devDependencies": {
     "turbo": "^2.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "undici": ">=5.28.5",
+      "esbuild": ">=0.25.0"
+    }
   }
 }
