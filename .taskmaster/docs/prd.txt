@@ -1,0 +1,444 @@
+# Traffboard Analytics Dashboard - Product Requirements Document
+
+## Project Overview
+
+Transform the Next.js SaaS Boilerplate (https://github.com/ixartz/SaaS-Boilerplate) into Traffboard, a comprehensive analytics dashboard for affiliate marketing and player conversion tracking. This project requires 90% automation using Infrastructure MCPs (Digital Ocean, PostgreSQL, GitHub Actions) with intelligent cleanup and modernization.
+
+## Technical Architecture
+
+### Monorepo Structure (Turborepo)
+```
+apps/
+├── web/              # Next.js 15 frontend + API routes
+└── api/              # Node.js backend (GraphQL + Fastify)
+packages/
+├── database/         # Drizzle schema + migrations  
+├── auth/            # 2FA authentication system
+├── partners/        # Partner data normalization engine
+├── ui/              # shadcn components library
+└── types/           # Shared TypeScript definitions
+```
+
+### Backend Infrastructure  
+- **Frontend**: Next.js 15 App Router with TypeScript
+- **Backend**: Node.js with GraphQL + Fastify (if necessary)
+- **Database**: PostgreSQL (Digital Ocean Managed Database)
+- **ORM**: Drizzle for type-safe database operations
+- **Package Manager**: pnpm only (no npm)
+- **Containerization**: Docker for consistent deployment
+
+### Security Requirements
+- **Database**: Encrypted connections with `sslmode=require`
+- **Authentication**: 2FA with QR codes, JWT with refresh tokens
+- **API Security**: Input validation, rate limiting, CORS configuration
+- **Infrastructure**: VPC isolation, firewall rules, SSL certificates
+- **Secrets Management**: Environment-specific encrypted variables
+
+## Data Pipeline & Partner Normalization
+
+### Critical Business Requirement: Partner Data Normalization
+
+**Problem**: Different partners send data in inconsistent formats:
+- Partner A: `creative_id` → `source` field
+- Partner B: `creative_id` → `sub2` field  
+- Partner C: Missing required fields
+- Partner D: Different date formats
+
+**Solution**: Partner Settings Engine
+
+```typescript
+interface PartnerSettings {
+  partnerId: string;
+  fieldMappings: {
+    source: 'creative_id' | 'campaign_name' | 'sub2' | null;
+    sub2: 'creative_id' | 'landing_id' | 'custom_field' | null;
+    // ... other field mappings
+  };
+  requiredFields: string[];
+  dataValidation: ValidationRules;
+  dateFormat: 'YYYY-MM-DD' | 'MM/DD/YYYY' | 'DD.MM.YYYY';
+}
+```
+
+### Data Processing Pipeline
+1. **Raw Data Ingestion**: Google Sheets → Staging table
+2. **Partner Lookup**: Identify partner from data source
+3. **Field Mapping**: Apply partner-specific transformations
+4. **Validation**: Ensure required fields and data types
+5. **Normalization**: Convert to unified database schema
+6. **Insert**: Clean data → Analytics tables
+
+### Database Schema
+```sql
+-- Partner configuration
+partners_settings (
+  partner_id VARCHAR PRIMARY KEY,
+  field_mappings JSONB,
+  validation_rules JSONB,
+  created_at TIMESTAMP
+);
+
+-- Staging for raw data
+data_staging (
+  id SERIAL PRIMARY KEY,
+  raw_data JSONB,
+  partner_id VARCHAR,
+  processed BOOLEAN DEFAULT FALSE,
+  errors TEXT[]
+);
+
+-- Normalized analytics tables
+conversions (
+  id SERIAL PRIMARY KEY,
+  date DATE,
+  partner_id VARCHAR,
+  campaign_id VARCHAR,
+  source VARCHAR,        -- Normalized field
+  sub2 VARCHAR,          -- Normalized field
+  clicks INTEGER,
+  registrations INTEGER
+);
+```
+
+## Authentication System Requirements
+
+### 2FA Implementation
+- **QR Code Generation**: TOTP standard (compatible with Google Authenticator, Authy)
+- **Database Storage**: User credentials, 2FA secrets, session tokens
+- **User Journey**: Simple registration → Email verification → QR setup → Dashboard access
+- **Session Management**: JWT tokens with refresh rotation
+- **Security**: Rate limiting, account lockout, secure password requirements
+
+### User Management
+```sql
+users (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR UNIQUE,
+  password_hash VARCHAR,
+  totp_secret VARCHAR,
+  totp_enabled BOOLEAN DEFAULT FALSE,
+  role VARCHAR DEFAULT 'user',
+  created_at TIMESTAMP
+);
+
+sessions (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id),
+  token_hash VARCHAR,
+  expires_at TIMESTAMP,
+  created_at TIMESTAMP
+);
+```
+
+## UI/UX Requirements
+
+### shadcn Components (No Customization)
+- **Layout**: sidebar-7 template from shadcn
+- **Header**: Sticky header with navigation
+- **Theme**: Dark/light theme switcher in settings
+- **Charts**: shadcn charts library for all visualizations
+- **Forms**: Standard shadcn form components with validation
+
+### Design Principles
+- Focus on functionality over aesthetics
+- Responsive design for desktop/tablet
+- Accessibility compliance (WCAG 2.1)
+- Fast loading and smooth interactions
+
+## Infrastructure Requirements
+
+### Docker Configuration
+- **Application Container**: Next.js application with built-in API routes
+- **Database**: Digital Ocean Managed PostgreSQL (external)
+- **Development**: Hot reload and debugging capabilities
+- **Production**: Optimized build with health checks
+
+### Digital Ocean Setup
+- **Compute**: Droplet cluster with load balancing
+- **Database**: Managed PostgreSQL cluster with backups
+- **Storage**: Spaces for static assets and backups
+- **Networking**: VPC with security groups and firewall rules
+
+### CI/CD Pipeline
+- **GitHub Actions**: Automated testing, building, and deployment
+- **Container Registry**: Digital Ocean Container Registry
+- **Deployment Strategy**: Blue-green deployments with rollback capability
+- **Environment Management**: Staging and production environments
+
+## Fast-First Deployment Strategy
+
+### Phase 1: MVP (30 minutes) → Live URL
+- Clone SaaS boilerplate
+- Basic dashboard with mock data
+- Deploy to Digital Ocean
+- SSL + domain configuration
+
+### Phase 2: Secure Foundation (1 hour)
+- PostgreSQL setup with encrypted connections
+- 2FA authentication system
+- Basic partner settings interface
+- Security middleware implementation
+
+### Phase 3: Data Pipeline (2 hours)
+- Partner normalization engine
+- CSV import with validation
+- Real analytics data integration
+- Error handling and monitoring
+
+### Phase 4: Production Features
+- Advanced analytics dashboards
+- Export functionality
+- Performance optimization
+- Monitoring and alerting
+
+## COMPLEXITY REQUIREMENT
+All tasks must be ≤3/10 complexity. Auto-decompose tasks >3 into ≤10 subtasks.
+Target: <2 hours per task with complete testing and validation.
+
+## Additional Development Speed Suggestions
+
+### 🚀 Rapid Development Strategies
+
+**1. Data-First Approach:**
+- Generate components directly from CSV structure
+- Auto-create database schema from existing data
+- Build type-safe APIs based on actual data patterns
+- Create realistic test data from production patterns
+
+**2. Template-Driven Development:**
+- Start with working analytics dashboard template
+- Pre-populate with actual conversion data structure
+- Use battle-tested component patterns
+- Implement responsive design from the start
+
+**3. Infrastructure-as-Code Acceleration:**
+- Docker compose for instant local environment
+- GitHub Actions templates for immediate CI/CD
+- Digital Ocean terraform for reproducible infrastructure
+- Database migrations with rollback capabilities
+
+**4. Performance-First Implementation:**
+- Server Components for zero client-side data fetching
+- Pre-computed aggregation tables for dashboard speed
+- Optimistic UI updates for better user experience
+- Edge caching strategies for static analytics
+
+**5. Testing Automation:**
+- Generate tests from actual CSV data patterns
+- Create visual regression tests for charts
+- Performance tests for data-heavy operations
+- E2E tests covering complete user workflows
+
+### ⚡ Implementation Accelerators
+
+**Auto-Generated Development Environment:**
+```bash
+# Single command setup
+npm run setup:dev
+# - Clones SaaS boilerplate
+# - Removes unnecessary features
+# - Sets up Turborepo structure
+# - Configures Docker environment
+# - Seeds database with test data
+# - Starts development servers
+```
+
+**Smart Code Generation:**
+```bash
+# Generate complete features from data structure
+npm run generate:analytics-feature --csv conversions.csv
+# - Creates database schema
+# - Generates TypeScript types
+# - Creates API routes
+# - Builds dashboard components
+# - Writes comprehensive tests
+```
+
+**Deployment Automation:**
+```bash
+# One-command deployment
+npm run deploy:production
+# - Builds optimized containers
+# - Provisions Digital Ocean infrastructure
+# - Deploys with zero downtime
+# - Sets up monitoring and alerts
+```
+
+## Performance Requirements
+
+### Frontend Performance
+- **Load Time**: < 2 seconds initial page load
+- **Interactivity**: < 500ms filter response time
+- **Bundle Size**: Optimized with Turbopack tree-shaking
+- **Lighthouse Score**: 90+ across all metrics
+
+### Backend Performance
+- **API Response**: < 200ms for standard queries
+- **Database Queries**: Optimized with indexes and caching
+- **Concurrent Users**: Support 100+ simultaneous users
+- **Data Processing**: Handle 1M+ records efficiently
+
+### Infrastructure Scalability
+- **Simplified Scaling**: Single droplet vertical scaling initially
+- **Database**: Connection pooling and read optimization
+- **Caching**: Next.js built-in caching strategies
+- **CDN**: Static asset delivery optimization
+
+## Speed Optimization & Development Acceleration Requirements
+
+### Auto-Generation Tools (Must Implement)
+
+**Database Type Generation:**
+- Auto-generate TypeScript types from Drizzle schema
+- Create migration files from schema changes
+- Generate seed data for development and testing
+
+**Component Generation:**
+- Auto-generate dashboard components from CSV data structure
+- Create chart components with proper TypeScript interfaces
+- Generate filter components with state management
+- Auto-create form components with validation
+
+**API Generation:**
+- Generate type-safe API routes from database schema
+- Create CRUD operations for all entities
+- Auto-generate API documentation
+- Generate client-side API functions with proper typing
+
+### Development Speed Multipliers
+
+**Template Accelerators:**
+- Pre-built analytics dashboard templates
+- Chart component library with data binding
+- Filter system templates with multi-dimensional state
+- Export functionality templates with various formats
+
+**Code Scaffolding:**
+- Complete feature generation (analytics modules)
+- CRUD operation templates for any entity
+- Authentication system scaffolding
+- Dashboard page templates with routing
+
+**Performance Optimization:**
+- Bundle analysis and optimization tools
+- Database query optimization suggestions
+- Image and asset optimization pipelines
+- Font loading optimization
+
+### Task Complexity Management (Critical Requirement)
+
+**COMPLEXITY REQUIREMENT: All tasks must be ≤3/10 complexity.**
+
+**Auto-Decomposition Rules:**
+- TaskMaster must automatically decompose any task >3 complexity
+- Maximum 10 subtasks per parent task
+- Each subtask must be completable in <2 hours
+- Dependencies should be flattened to ≤3 levels deep
+
+**Validation Requirements:**
+- All generated tasks must pass complexity validation
+- Tasks with >5 acceptance criteria must be subdivided
+- Infrastructure tasks get priority in dependency ordering
+- Testing tasks must be bundled with implementation tasks
+
+**Progress Tracking:**
+- Real-time complexity scoring for all tasks
+- Duration estimation vs actual tracking
+- Bottleneck identification and auto-resolution
+- Success rate monitoring per task complexity level
+
+## Security Requirements
+
+### Authentication & Authorization
+- **Auth System**: Simplified JWT-based authentication
+- **Role Management**: Admin/User permission levels
+- **Session Security**: Secure cookie handling and CSRF protection
+
+### Data Protection
+- **Database Security**: Encrypted connections and access controls
+- **API Security**: Rate limiting and input validation
+- **Infrastructure**: VPC isolation and firewall rules
+- **Compliance**: Basic data privacy and retention policies
+
+## Migration Strategy
+
+### Boilerplate Cleanup
+- **Remove**: Clerk auth, Stripe payments, Sentry monitoring, i18n
+- **Keep**: Next.js structure, Tailwind config, testing setup
+- **Transform**: Update to analytics-focused components
+
+### Data Migration
+- **Schema Design**: Based on provided CSV structures
+- **Import Tools**: Automated CSV to PostgreSQL ingestion
+- **Validation**: Data integrity checks and error reporting
+
+### Deployment Pipeline
+- **Staging Environment**: Complete testing environment
+- **Production Deployment**: Automated with rollback capability
+- **Monitoring**: Health checks and performance metrics
+
+## Success Metrics
+
+### Technical Metrics
+- **Automation Level**: 90%+ of tasks automated via MCPs
+- **Build Time**: < 5 minutes for full pipeline
+- **Test Coverage**: 80%+ unit and integration tests
+- **Deployment Success**: 99%+ successful deployments
+
+### Performance Metrics
+- **Dashboard Load Time**: < 2 seconds
+- **API Response Time**: < 200ms average
+- **Database Query Performance**: < 100ms for standard operations
+- **Uptime**: 99.9% availability target
+
+### Development Metrics
+- **Code Quality**: ESLint compliance with zero errors
+- **TypeScript Coverage**: 100% type safety
+- **Documentation**: Complete API and component documentation
+- **Maintainability**: Modular architecture with clear separation of concerns
+
+## Timeline & Milestones
+
+### Week 1: Foundation & Infrastructure
+- Project setup and boilerplate cleanup
+- PostgreSQL schema and Docker configuration
+- Digital Ocean infrastructure provisioning
+- CI/CD pipeline establishment
+
+### Week 2: Backend & Data Pipeline
+- Node.js API development
+- Database integration and migrations
+- Google Sheets data pipeline
+- Testing and validation systems
+
+### Week 3: Dashboard Development
+- Analytics components and visualizations
+- Filter systems and state management
+- Responsive UI implementation
+- Performance optimization
+
+### Week 4: Deployment & Optimization
+- Production deployment
+- Performance tuning and monitoring
+- Security hardening
+- Documentation and handover
+
+## Risk Assessment
+
+### Technical Risks
+- **Complexity**: Managing multi-container architecture
+- **Performance**: Large dataset query optimization
+- **Integration**: Google Sheets API rate limits
+- **Migration**: Data integrity during CSV imports
+
+### Infrastructure Risks
+- **Scalability**: Database performance under load
+- **Availability**: Single points of failure
+- **Security**: API and database vulnerabilities
+- **Cost**: Digital Ocean resource optimization
+
+### Mitigation Strategies
+- **Monitoring**: Comprehensive logging and alerting
+- **Backup**: Automated database backups and disaster recovery
+- **Testing**: Extensive automated testing coverage
+- **Documentation**: Clear operational procedures and troubleshooting guides
