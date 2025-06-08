@@ -6,11 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint . --ignore-pattern .next --ignore-pattern dist",
+    "lint": "eslint . --ignore-pattern .next --ignore-pattern dist --ignore-pattern scripts",
     "lint:fix": "eslint . --fix",
     "test": "vitest run",
     "test:watch": "vitest",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "create-user": "node scripts/create-user.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

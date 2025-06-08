@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { loginSchema, type LoginCredentials } from "@traffboard/auth";
 import { useAuth } from "@/components/auth/AuthProvider";
 import {
@@ -133,13 +132,6 @@ export default function LoginPage() {
               </Button>
             </form>
           </Form>
-          
-          <div className="mt-4 text-center text-sm">
-            Don&apos;t have an account?{" "}
-            <Link href="/register" className="text-blue-600 hover:underline">
-              Create one
-            </Link>
-          </div>
         </CardContent>
       </Card>
     </div>

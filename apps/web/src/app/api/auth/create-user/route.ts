@@ -8,6 +8,12 @@ import {
 import { eq } from 'drizzle-orm';
 import { headers } from 'next/headers';
 
+/**
+ * Admin-only endpoint for creating new users
+ * This endpoint is for internal use only - users are created manually by administrators
+ * Regular user registration is not available in this application
+ */
+
 // Rate limiting storage (in production, use Redis)
 const attempts = new Map<string, { count: number; resetTime: number }>();
 

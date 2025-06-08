@@ -15,14 +15,11 @@ export default function HomePage() {
             Traffboard Analytics
           </h1>
           <p className="text-center text-xl text-gray-600 mb-8">
-            Analytics dashboard for affiliate marketing
+            Internal analytics dashboard for affiliate marketing
           </p>
-          <div className="flex justify-center gap-4">
+          <div className="flex justify-center">
             <Link href="/login">
               <Button>Sign In</Button>
-            </Link>
-            <Link href="/register">
-              <Button variant="outline">Create Account</Button>
             </Link>
           </div>
         </div>
