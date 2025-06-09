@@ -105,6 +105,8 @@ jobs:
           restore-keys: ${{ runner.os }}-pnpm-store-
       - run: pnpm install --frozen-lockfile
       - run: pnpm run build
+        env:
+          DATABASE_URL: postgresql://user:pass@localhost:5432/placeholder
       - name: Check build artifacts
         run: |
           if [ ! -d "apps/web/.next" ]; then

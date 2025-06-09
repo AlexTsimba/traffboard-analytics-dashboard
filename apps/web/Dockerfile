@@ -18,6 +18,8 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# Set placeholder DATABASE_URL for build time
+ENV DATABASE_URL=postgresql://user:pass@localhost:5432/placeholder
 RUN pnpm run build --filter=@traffboard/web
 
 FROM base AS runner
