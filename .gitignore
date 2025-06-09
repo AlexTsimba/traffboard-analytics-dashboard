@@ -33,6 +33,9 @@ out/
 tasks.json
 tasks/ 
 
+# Turbo cache
+.turbo/
+
 # AI Assistant folders and files
 .roo/
 .cursor/
