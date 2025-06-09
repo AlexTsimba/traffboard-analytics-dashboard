@@ -1,6 +1,8 @@
-# Traffboard Analytics Dashboard
+# Traffboard Analytics Dashboard 🔒 PRIVATE
 
 A comprehensive analytics dashboard for affiliate marketing and player conversion tracking, built with Next.js 15 App Router and PostgreSQL.
+
+> **⚠️ Private Repository**: This repository is private. All CI/CD workflows, Docker builds, and deployment processes are fully functional with private repositories.
 
 ## 🚀 Architecture
 
@@ -9,6 +11,7 @@ A comprehensive analytics dashboard for affiliate marketing and player conversio
 - **Authentication**: Custom 2FA with JWT tokens and TOTP
 - **UI**: shadcn/ui components with Tailwind CSS
 - **Deployment**: Docker container on Digital Ocean
+- **CI/CD**: GitHub Actions with private repository support
 
 ## 🏗️ Project Structure
 
@@ -27,6 +30,23 @@ packages/
 └── types/               # Shared TypeScript definitions
 ```
 
+## 🔐 Private Repository Setup
+
+### Access Requirements
+- Repository collaborators must be explicitly invited
+- GitHub Container Registry images are private by default
+- CI/CD workflows use `GITHUB_TOKEN` for authentication
+- All secrets and environment variables are secure
+
+### Team Access
+```bash
+# Invite collaborators (repository owner only)
+# 1. Go to repository Settings → Manage access
+# 2. Click "Invite a collaborator"
+# 3. Enter GitHub username or email
+# 4. Select permission level (Read, Write, Admin)
+```
+
 ## 🛠️ Development Setup
 
 ### Prerequisites
@@ -34,11 +54,13 @@ packages/
 - pnpm 9+
 - PostgreSQL 16+
 - Docker (optional)
+- **Repository access** (must be invited as collaborator)
 
 ### Quick Start
 
-1. **Clone and install dependencies:**
+1. **Clone repository (requires access):**
    ```bash
+   # For collaborators with access
    git clone https://github.com/AlexTsimba/traffboard-analytics-dashboard.git
    cd traffboard-analytics-dashboard
    pnpm install
@@ -82,6 +104,21 @@ pnpm db:migrate       # Run database migrations
 pnpm db:studio        # Open Drizzle Studio
 ```
 
+## 🔒 CI/CD with Private Repository
+
+### GitHub Actions Benefits
+- **Free CI/CD minutes**: 2,000 minutes/month on private repos
+- **Secure by default**: All workflow logs are private
+- **Secret management**: Enhanced security for sensitive data
+- **Container registry**: Private Docker images in GHCR
+
+### Workflow Features
+- ✅ **Quality Gates**: ESLint, TypeScript, tests (71 tests passing)
+- ✅ **Docker Builds**: Multi-platform images (amd64/arm64)
+- ✅ **Deployment**: Automated Digital Ocean deployment
+- ✅ **Security**: Private image registry, encrypted secrets
+- ✅ **Monitoring**: Health checks and deployment validation
+
 ## 🔐 Authentication
 
 The application uses custom authentication with:
@@ -112,65 +149,63 @@ The application uses custom authentication with:
 3. **Analytics Processing**: Server Components with ISR caching
 4. **Visualization**: Interactive charts with shadcn/ui
 
-## 🐳 Docker Deployment
+## 🐳 Docker Deployment (Private Repository)
 
-### Single Container Setup
-
+### Private Container Registry
 ```bash
-# Build image
-docker build -f apps/web/Dockerfile -t traffboard .
+# Login to GitHub Container Registry
+echo $GITHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
 
-# Run with environment variables
-docker run -p 3000:3000 \
-  -e DATABASE_URL=postgresql://... \
-  -e JWT_SECRET=your-secret \
-  traffboard
+# Pull private image (requires authentication)
+docker pull ghcr.io/alextsimba/traffboard-analytics-dashboard:latest
 ```
 
 ### Production with docker-compose
-
 ```bash
-# Production deployment
+# Production deployment with private images
 docker-compose -f docker-compose.prod.yml up -d
 ```
 
 ## 🔒 Security Features
 
+- **Private Repository**: Source code access restricted to collaborators
 - **Environment Variables**: Secure secret management
 - **Database**: Encrypted connections with SSL
 - **API Security**: Rate limiting and CORS configuration
 - **Authentication**: 2FA, session management, secure cookies
 - **Input Validation**: Zod schemas for all API inputs
+- **Container Security**: Private image registry, vulnerability scanning
 
-## 🏃 Performance Optimizations
+## 🤝 Contributing (Private Repository)
 
-- **Server Components**: Direct database queries, zero client-side data fetching
-- **ISR Caching**: Incremental Static Regeneration for analytics reports
-- **Bundle Optimization**: Tree-shaking, code splitting
-- **Database**: Connection pooling, optimized queries with Drizzle
+### For Repository Collaborators:
 
-## 📈 Monitoring & Observability
+1. **Get Repository Access**: Must be invited by repository owner
+2. **Create Feature Branch**: `git checkout -b feature/new-feature`
+3. **Develop and Test**: Ensure all tests pass (`pnpm test`)
+4. **Submit Pull Request**: Private PRs with automated CI/CD validation
+5. **Code Review**: Team review process with private discussions
 
-- **Health Checks**: `/api/health` endpoint
-- **Error Handling**: Graceful error boundaries
-- **Logging**: Structured logging for debugging
-- **Performance**: Bundle analysis and optimization
+### Development Workflow:
+```bash
+# Clone (requires access)
+git clone https://github.com/AlexTsimba/traffboard-analytics-dashboard.git
 
-## 🤝 Contributing
+# Create feature branch
+git checkout -b feature/your-feature
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/new-feature`
-3. Commit changes: `git commit -am 'Add new feature'`
-4. Push to branch: `git push origin feature/new-feature`
-5. Submit a pull request
+# Run quality checks
+pnpm lint && pnpm test && pnpm type-check
 
-## 📝 License
+# Commit and push
+git commit -am 'feat: add new feature'
+git push origin feature/your-feature
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+# Create pull request (private)
+```
 
-## 🆘 Support
+## 📝 License & Support
 
-For support and questions:
-- Create an issue on GitHub
-- Check the documentation in `/docs`
-- Review the API documentation at `/api-docs`
+This project is licensed under the MIT License.
+
+> **🔒 Repository Status**: Private - Access restricted to invited collaborators only

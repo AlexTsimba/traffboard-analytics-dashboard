@@ -1,4 +1,9 @@
-name: CI
+name: CI (Private Repository)
+
+# CI workflow optimized for private repositories
+# - All workflow logs are private
+# - Enhanced secret security
+# - Free 2,000 minutes/month for private repos
 
 on:
   push:

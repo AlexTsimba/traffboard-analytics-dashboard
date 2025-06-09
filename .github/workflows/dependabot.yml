@@ -1,4 +1,8 @@
-name: Dependabot Auto-Merge
+name: Dependabot Auto-Merge (Private Repository)
+
+# Dependabot auto-merge for private repositories
+# - Enhanced security for dependency updates
+# - Private pull requests and discussions
 
 on:
   pull_request:

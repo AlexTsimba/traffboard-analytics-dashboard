@@ -1,4 +1,9 @@
-name: CD
+name: CD (Private Repository)
+
+# CD workflow optimized for private repositories
+# - Private Docker images in GHCR
+# - Enhanced deployment security
+# - Private workflow logs and artifacts
 
 on:
   push:
