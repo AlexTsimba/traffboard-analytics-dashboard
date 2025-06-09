@@ -46,16 +46,16 @@ export interface NormalizedPlayer {
   disabled?: boolean;
   currency?: string;
   ftdCount?: number;
-  ftdSum?: number;
+  ftdSum?: string;  // Changed to string for decimal type
   depositsCount?: number;
-  depositsSum?: number;
+  depositsSum?: string;  // Changed to string for decimal type
   cashoutsCount?: number;
-  cashoutsSum?: number;
+  cashoutsSum?: string;  // Changed to string for decimal type
   casinoBetsCount?: number;
-  casinoRealNgr?: number;
-  fixedPerPlayer?: number;
-  casinoBetsSum?: number;
-  casinoWinsSum?: number;
+  casinoRealNgr?: string;  // Changed to string for decimal type
+  fixedPerPlayer?: string;  // Changed to string for decimal type
+  casinoBetsSum?: string;  // Changed to string for decimal type
+  casinoWinsSum?: string;  // Changed to string for decimal type
   date: string;
 }
 

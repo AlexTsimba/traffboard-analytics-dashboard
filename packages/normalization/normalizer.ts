@@ -18,7 +18,6 @@ export class PartnerDataNormalizer {
   private validator?: DataValidator;
   private dimensionNormalizer?: DimensionNormalizer;
   private partnerId?: number;
-  private partnerName?: string;
 
   async loadPartnerSettings(partnerId: number): Promise<void> {
     const [settings] = await db
@@ -35,7 +34,6 @@ export class PartnerDataNormalizer {
     }
 
     this.partnerId = partnerId;
-    this.partnerName = settings.partnerName;
     
     if (settings.fieldMappings) {
       this.fieldMapper = new FieldMapper(settings.fieldMappings);
@@ -81,7 +79,12 @@ export class PartnerDataNormalizer {
       }
 
       // Normalize dimensions
-      let dimensions = { buyerId: null, funnelId: null, sourceId: null, campaignId: null };
+      let dimensions: { buyerId: number | null; funnelId: number | null; sourceId: number | null; campaignId: number | null } = { 
+        buyerId: null, 
+        funnelId: null, 
+        sourceId: null, 
+        campaignId: null 
+      };
       if (this.dimensionNormalizer) {
         dimensions = await this.dimensionNormalizer.normalizeAllDimensions(mapped);
       }
@@ -163,16 +166,16 @@ export class PartnerDataNormalizer {
         disabled: Boolean(mapped.disabled),
         currency: mapped.currency,
         ftdCount: mapped.ftdCount ? Number(mapped.ftdCount) : 0,
-        ftdSum: mapped.ftdSum ? Number(mapped.ftdSum) : 0,
+        ftdSum: mapped.ftdSum ? String(mapped.ftdSum) : '0',
         depositsCount: mapped.depositsCount ? Number(mapped.depositsCount) : 0,
-        depositsSum: mapped.depositsSum ? Number(mapped.depositsSum) : 0,
+        depositsSum: mapped.depositsSum ? String(mapped.depositsSum) : '0',
         cashoutsCount: mapped.cashoutsCount ? Number(mapped.cashoutsCount) : 0,
-        cashoutsSum: mapped.cashoutsSum ? Number(mapped.cashoutsSum) : 0,
+        cashoutsSum: mapped.cashoutsSum ? String(mapped.cashoutsSum) : '0',
         casinoBetsCount: mapped.casinoBetsCount ? Number(mapped.casinoBetsCount) : 0,
-        casinoRealNgr: mapped.casinoRealNgr ? Number(mapped.casinoRealNgr) : 0,
-        fixedPerPlayer: mapped.fixedPerPlayer ? Number(mapped.fixedPerPlayer) : 0,
-        casinoBetsSum: mapped.casinoBetsSum ? Number(mapped.casinoBetsSum) : 0,
-        casinoWinsSum: mapped.casinoWinsSum ? Number(mapped.casinoWinsSum) : 0,
+        casinoRealNgr: mapped.casinoRealNgr ? String(mapped.casinoRealNgr) : '0',
+        fixedPerPlayer: mapped.fixedPerPlayer ? String(mapped.fixedPerPlayer) : '0',
+        casinoBetsSum: mapped.casinoBetsSum ? String(mapped.casinoBetsSum) : '0',
+        casinoWinsSum: mapped.casinoWinsSum ? String(mapped.casinoWinsSum) : '0',
         date: mapped.date || new Date().toISOString().split('T')[0],
       };
 
