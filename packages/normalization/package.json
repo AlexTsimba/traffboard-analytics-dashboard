@@ -1,8 +1,13 @@
 {
   "name": "@traffboard/normalization",
   "version": "0.1.0",
+  "private": true,
   "main": "index.ts",
   "types": "index.ts",
+  "scripts": {
+    "build": "echo 'Normalization package - no build needed'",
+    "type-check": "echo 'Normalization package - no type check needed'"
+  },
   "dependencies": {
     "@traffboard/database": "workspace:*",
     "zod": "^3.25.56",

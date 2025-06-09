@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "main": "index.ts",
+  "scripts": {
+    "build": "echo 'Auth package - no build needed'",
+    "type-check": "echo 'Auth package - no type check needed'"
+  },
   "dependencies": {
     "jsonwebtoken": "^9.0.2",
     "bcryptjs": "^2.4.3",

@@ -29,9 +29,9 @@ COPY apps/web/ ./apps/web/
 # Set build environment variables
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 ENV DATABASE_URL=postgresql://user:pass@localhost:5432/placeholder
 # Build using turbo for workspace optimization
-# First build all workspace dependencies
 RUN pnpm run build
 
 FROM base AS runner

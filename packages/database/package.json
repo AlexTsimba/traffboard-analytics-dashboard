@@ -4,6 +4,8 @@
   "private": true,
   "main": "index.ts",
   "scripts": {
+    "build": "echo 'Database package - no build needed'",
+    "type-check": "echo 'Database package - no type check needed'",
     "generate": "drizzle-kit generate",
     "migrate": "drizzle-kit migrate",
     "studio": "drizzle-kit studio"
