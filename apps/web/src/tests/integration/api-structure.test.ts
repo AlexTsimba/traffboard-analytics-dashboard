@@ -3,12 +3,6 @@ import { describe, it, expect } from 'vitest';
 describe('API Endpoint Structure Tests', () => {
   it('should validate health endpoint structure', async () => {
     // Test the expected response structure without making actual HTTP calls
-    const expectedHealthResponse = {
-      status: 'ok',
-      service: 'traffboard-api',
-      timestamp: expect.any(String)
-    };
-
     const mockHealthResponse = {
       status: 'ok',
       service: 'traffboard-api',

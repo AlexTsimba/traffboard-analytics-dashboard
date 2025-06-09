@@ -2,10 +2,7 @@ version: '3.8'
 
 services:
   web:
-    build:
-      context: .
-      dockerfile: apps/web/Dockerfile
-      target: runner
+    image: ${DOCKER_IMAGE:-ghcr.io/alextsimba/traffboard-analytics-dashboard:latest}
     ports:
       - "3000:3000"
     environment:

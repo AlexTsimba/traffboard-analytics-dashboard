@@ -8,6 +8,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/web/package.json ./apps/web/
 COPY packages/auth/package.json ./packages/auth/
 COPY packages/database/package.json ./packages/database/
+COPY packages/normalization/package.json ./packages/normalization/
 COPY packages/partners/package.json ./packages/partners/
 COPY packages/types/package.json ./packages/types/
 COPY packages/ui/package.json ./packages/ui/

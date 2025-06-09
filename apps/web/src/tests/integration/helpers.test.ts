@@ -90,8 +90,8 @@ describe('Data Processing Functions Coverage', () => {
       .map(line => {
         const [id, date, amount, currency] = line.split(',');
         return {
-          id: id?.trim(),
-          date: date?.trim(),
+          id: id?.trim() || '',
+          date: date?.trim() || '',
           amount: amount ? parseFloat(amount.trim()) : 0,
           currency: currency?.trim() || 'USD'
         };
@@ -130,8 +130,8 @@ describe('Data Processing Functions Coverage', () => {
       const result = processCSVData(csv);
       
       expect(result).toHaveLength(3);
-      expect(result[0].amount).toBe(0);
-      expect(result[1].currency).toBe('USD');
+      expect(result[0]?.amount).toBe(0);
+      expect(result[1]?.currency).toBe('USD');
     });
   });
 

@@ -9,7 +9,7 @@ describe('Utility Functions Tests', () => {
         return {
           userId,
           date,
-          amount: parseFloat(amount),
+          amount: amount ? parseFloat(amount) : 0,
           currency
         };
       };
