@@ -176,12 +176,21 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: 🏗️ Build application
-        run: pnpm run build
+        run: |
+          echo "🔍 Environment variables:"
+          echo "NODE_ENV: $NODE_ENV"
+          echo "DATABASE_URL: $DATABASE_URL"
+          echo "NEXTAUTH_SECRET: $NEXTAUTH_SECRET"
+          echo "NEXTAUTH_URL: $NEXTAUTH_URL"
+          echo "🚀 Starting build..."
+          pnpm run build
         env:
           DATABASE_URL: postgresql://user:pass@localhost:5432/placeholder
           NODE_ENV: production
           NEXT_TELEMETRY_DISABLED: 1
           NODE_OPTIONS: "--max-old-space-size=4096"
+          NEXTAUTH_SECRET: build-time-secret-placeholder
+          NEXTAUTH_URL: http://localhost:3000
 
       - name: ✅ Verify build artifacts
         run: |

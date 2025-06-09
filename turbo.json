@@ -4,8 +4,8 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "dist/**", "lib/**", "build/**"],
-      "env": ["NODE_ENV", "DATABASE_URL"]
+      "outputs": [".next/**", "dist/**", "lib/**", "build/**", "!.next/cache/**"],
+      "env": ["NODE_ENV", "DATABASE_URL", "NEXTAUTH_SECRET", "NEXTAUTH_URL"]
     },
     "dev": {
       "cache": false,
@@ -23,5 +23,6 @@
     "clean": {
       "cache": false
     }
-  }
+  },
+  "globalEnv": ["NODE_ENV"]
 }

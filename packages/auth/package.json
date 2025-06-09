@@ -4,7 +4,7 @@
   "private": true,
   "main": "index.ts",
   "scripts": {
-    "build": "echo 'Auth package - no build needed'",
+    "build": "echo 'Auth package - no build outputs'",
     "type-check": "echo 'Auth package - no type check needed'"
   },
   "dependencies": {

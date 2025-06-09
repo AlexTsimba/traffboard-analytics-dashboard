@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:web": "next build",
     "start": "next start",
     "lint": "eslint . --ignore-pattern .next --ignore-pattern dist --ignore-pattern scripts",
     "lint:fix": "eslint . --fix",
