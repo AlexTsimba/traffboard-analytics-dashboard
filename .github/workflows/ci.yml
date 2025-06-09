@@ -1,55 +1,78 @@
-name: CI (Private Repository)
+name: ✅ Continuous Integration
 
-# CI workflow optimized for private repositories
-# - All workflow logs are private
-# - Enhanced secret security
-# - Free 2,000 minutes/month for private repos
+# Modern CI workflow optimized for private repositories
+# Features: Enhanced caching, parallel execution, comprehensive testing
 
 on:
   push:
-    branches: [ main, master, develop ]
+    branches: [main, master, develop]
   pull_request:
-    branches: [ main, master, develop ]
+    branches: [main, master, develop]
 
 env:
   NODE_VERSION: '20'
   PNPM_VERSION: '9.0.0'
+  CI: true
 
 jobs:
+  # Quality checks (linting, type checking)
   quality:
     runs-on: ubuntu-latest
-    name: 'Quality Checks'
+    name: 'Code Quality'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🔧 Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - uses: pnpm/action-setup@v4
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
-      - name: Get pnpm store directory
+
+      - name: 🗂️ Get pnpm store directory
         shell: bash
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-      - uses: actions/cache@v4
+
+      - name: ♻️ Cache pnpm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: ♻️ Cache Next.js build
+        uses: actions/cache@v4
         with:
           path: |
-            ${{ env.STORE_PATH }}
             ${{ github.workspace }}/.next/cache
-          key: ${{ runner.os }}-pnpm-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
+            ${{ github.workspace }}/apps/web/.next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
           restore-keys: |
-            ${{ runner.os }}-pnpm-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
-            ${{ runner.os }}-pnpm-nextjs-
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm run lint
-        env:
-          NODE_OPTIONS: "--max-old-space-size=4096"
-      - run: pnpm run type-check
+            ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
+            ${{ runner.os }}-nextjs-
+
+      - name: 📥 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🧹 Run ESLint
+        run: pnpm run lint
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
 
+      - name: 🔍 Type checking
+        run: pnpm run type-check
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+
+  # Unit and integration tests
   test:
     runs-on: ubuntu-latest
-    name: 'Unit Tests'
+    name: 'Tests'
     services:
       postgres:
         image: postgres:16-alpine
@@ -65,72 +88,113 @@ jobs:
         ports:
           - 5432:5432
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🔧 Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - uses: pnpm/action-setup@v4
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
-      - name: Get pnpm store directory
+
+      - name: 🗂️ Get pnpm store directory
         shell: bash
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-      - uses: actions/cache@v4
+
+      - name: ♻️ Cache pnpm dependencies
+        uses: actions/cache@v4
         with:
-          path: |
-            ${{ env.STORE_PATH }}
-            ${{ github.workspace }}/.next/cache
-          key: ${{ runner.os }}-pnpm-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            ${{ runner.os }}-pnpm-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
-            ${{ runner.os }}-pnpm-nextjs-
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm run test
+            ${{ runner.os }}-pnpm-store-
+
+      - name: 📥 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🧪 Run tests
+        run: pnpm run test
         env:
           DATABASE_URL: postgresql://postgres:password@localhost:5432/traffboard_test
           NODE_OPTIONS: "--max-old-space-size=4096"
-      - uses: codecov/codecov-action@v4
+
+      - name: 📊 Upload coverage reports
+        uses: codecov/codecov-action@v4
         if: success()
         with:
           files: ./apps/web/coverage/coverage-final.json
           flags: unittests
           fail_ci_if_error: false
 
+  # Build verification
   build:
     runs-on: ubuntu-latest
     name: 'Build Check'
     needs: [quality, test]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🔧 Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - uses: pnpm/action-setup@v4
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
-      - name: Get pnpm store directory
+
+      - name: 🗂️ Get pnpm store directory
         shell: bash
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-      - uses: actions/cache@v4
+
+      - name: ♻️ Cache pnpm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: ♻️ Cache Next.js build
+        uses: actions/cache@v4
         with:
           path: |
-            ${{ env.STORE_PATH }}
             ${{ github.workspace }}/.next/cache
-          key: ${{ runner.os }}-pnpm-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
+            ${{ github.workspace }}/apps/web/.next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
           restore-keys: |
-            ${{ runner.os }}-pnpm-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
-            ${{ runner.os }}-pnpm-nextjs-
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm run build
+            ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
+            ${{ runner.os }}-nextjs-
+
+      - name: 📥 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🏗️ Build application
+        run: pnpm run build
         env:
           DATABASE_URL: postgresql://user:pass@localhost:5432/placeholder
           NODE_ENV: production
           NEXT_TELEMETRY_DISABLED: 1
           NODE_OPTIONS: "--max-old-space-size=4096"
-      - name: Check build artifacts
+
+      - name: ✅ Verify build artifacts
         run: |
           if [ ! -d "apps/web/.next" ]; then
-            echo "Build artifacts not found!"
+            echo "❌ Build artifacts not found!"
             exit 1
           fi
           echo "✅ Build artifacts verified"
+
+      - name: 📊 Build summary
+        run: |
+          echo "🎉 All CI checks passed successfully!"
+          echo "📦 Build size: $(du -sh apps/web/.next | cut -f1)"
+          echo "🔍 Quality checks: ✅"
+          echo "🧪 Tests: ✅" 
+          echo "🏗️ Build: ✅"
