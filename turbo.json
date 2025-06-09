@@ -4,7 +4,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "dist/**"],
+      "outputs": [".next/**", "dist/**", "lib/**", "build/**"],
       "env": ["NODE_ENV", "DATABASE_URL"]
     },
     "dev": {

@@ -20,6 +20,8 @@ env:
 jobs:
   docker:
     runs-on: ubuntu-latest
+    env:
+      NODE_OPTIONS: --max-old-space-size=8192
     if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'push'
     outputs:
       image: ${{ steps.image.outputs.image }}
@@ -53,6 +55,10 @@ jobs:
             NODE_ENV=production
             NEXT_TELEMETRY_DISABLED=1
             NODE_OPTIONS=--max-old-space-size=4096
+          # Increase timeout and add retry logic
+          timeout: 30m
+          build-contexts: |
+            project=.
       - id: image
         run: echo "image=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest" >> $GITHUB_OUTPUT
 

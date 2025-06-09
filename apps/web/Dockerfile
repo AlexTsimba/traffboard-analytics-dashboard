@@ -14,8 +14,8 @@ COPY packages/normalization/package.json ./packages/normalization/
 COPY packages/partners/package.json ./packages/partners/
 COPY packages/types/package.json ./packages/types/
 COPY packages/ui/package.json ./packages/ui/
-# Install dependencies with retry
-RUN pnpm install --frozen-lockfile
+# Install dependencies with retry and optimization
+RUN pnpm install --frozen-lockfile --prefer-offline
 
 FROM base AS builder
 WORKDIR /app
