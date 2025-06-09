@@ -3,6 +3,7 @@ import { partnerSettings } from '@traffboard/database';
 import { eq } from 'drizzle-orm';
 import { FieldMapper, DateConverter } from './fieldMapper';
 import { DataValidator } from './validator';
+import { DimensionNormalizer } from './dimensionNormalizer';
 import type { 
   RawConversionData, 
   RawPlayerData, 
@@ -15,7 +16,9 @@ export class PartnerDataNormalizer {
   private fieldMapper?: FieldMapper;
   private dateConverter?: DateConverter;
   private validator?: DataValidator;
+  private dimensionNormalizer?: DimensionNormalizer;
   private partnerId?: number;
+  private partnerName?: string;
 
   async loadPartnerSettings(partnerId: number): Promise<void> {
     const [settings] = await db
@@ -32,6 +35,7 @@ export class PartnerDataNormalizer {
     }
 
     this.partnerId = partnerId;
+    this.partnerName = settings.partnerName;
     
     if (settings.fieldMappings) {
       this.fieldMapper = new FieldMapper(settings.fieldMappings);
@@ -43,6 +47,14 @@ export class PartnerDataNormalizer {
     
     if (settings.validationRules) {
       this.validator = new DataValidator(settings.validationRules);
+    }
+
+    if (settings.dimensionMappings) {
+      this.dimensionNormalizer = new DimensionNormalizer(
+        partnerId, 
+        settings.partnerName, 
+        settings.dimensionMappings
+      );
     }
   }
 
@@ -68,6 +80,12 @@ export class PartnerDataNormalizer {
         mapped.date = this.dateConverter.convertDate(mapped.date);
       }
 
+      // Normalize dimensions
+      let dimensions = { buyerId: null, funnelId: null, sourceId: null, campaignId: null };
+      if (this.dimensionNormalizer) {
+        dimensions = await this.dimensionNormalizer.normalizeAllDimensions(mapped);
+      }
+
       // Apply data type conversions and defaults
       const normalized: NormalizedConversion = {
         date: mapped.date || new Date().toISOString().split('T')[0],
@@ -80,6 +98,11 @@ export class PartnerDataNormalizer {
         uniqueClicks: mapped.uniqueClicks ? Number(mapped.uniqueClicks) : 0,
         registrationsCount: mapped.registrationsCount ? Number(mapped.registrationsCount) : 0,
         ftdCount: mapped.ftdCount ? Number(mapped.ftdCount) : 0,
+        // Add normalized dimension references
+        buyerId: dimensions.buyerId,
+        funnelId: dimensions.funnelId,
+        sourceId: dimensions.sourceId,
+        campaignId: dimensions.campaignId,
       };
 
       return normalized;

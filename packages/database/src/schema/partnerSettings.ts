@@ -9,6 +9,9 @@ export const partnerSettings = pgTable('partner_settings', {
   // Field mapping configuration stored as JSON
   fieldMappings: jsonb('field_mappings').$type<FieldMappings>(),
   
+  // Dimension mapping configuration - NEW!
+  dimensionMappings: jsonb('dimension_mappings').$type<DimensionMappings>(),
+  
   // Date format configuration
   dateFormats: jsonb('date_formats').$type<DateFormats>(),
   
@@ -33,6 +36,13 @@ export interface FieldMappings {
   players?: {
     [partnerField: string]: string;
   };
+}
+
+export interface DimensionMappings {
+  buyer?: string;        // e.g., "webID" for makeberry, "sub2" for rockit
+  funnel?: string;       // e.g., "source" for both
+  source?: string;       // e.g., "traffic_source"
+  campaign?: string;     // e.g., "campaign_id"
 }
 
 export interface DateFormats {

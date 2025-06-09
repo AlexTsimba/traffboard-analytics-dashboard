@@ -19,6 +19,11 @@ export interface NormalizedConversion {
   uniqueClicks?: number;
   registrationsCount?: number;
   ftdCount?: number;
+  // Dimension references for dashboard filtering
+  buyerId?: number | null;
+  funnelId?: number | null;
+  sourceId?: number | null;
+  campaignId?: number | null;
 }
 
 export interface NormalizedPlayer {
@@ -74,6 +79,7 @@ export class ValidationError extends NormalizationError {
   }
 }
 
+export * from './dimensionNormalizer';
 export * from './fieldMapper';
 export * from './validator';
 export * from './normalizer';
