@@ -123,7 +123,7 @@ jobs:
           NODE_OPTIONS: "--max-old-space-size=4096"
 
       - name: 📊 Upload coverage reports
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         if: success()
         with:
           files: ./apps/web/coverage/coverage-final.json
