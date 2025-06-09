@@ -60,7 +60,7 @@
     "@vitest/expect": "^2.1.9",
     "autoprefixer": "^10.4.20",
     "cssnano": "^7.0.7",
-    "drizzle-kit": "^0.26.2",
+    "drizzle-kit": "^0.31.1",
     "eslint": "^8.57.1",
     "eslint-config-next": "^15.3.3",
     "jsdom": "^25.0.1",
