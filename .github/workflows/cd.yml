@@ -168,7 +168,7 @@ jobs:
 
       - name: 🚀 Deploy to Digital Ocean
         id: deploy
-        uses: appleboy/ssh-action@v1.1.0
+        uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_USERNAME }}
