@@ -31,7 +31,8 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV DATABASE_URL=postgresql://user:pass@localhost:5432/placeholder
 # Build using turbo for workspace optimization
-RUN pnpm run build --filter=@traffboard/web
+# First build all workspace dependencies
+RUN pnpm run build
 
 FROM base AS runner
 WORKDIR /app
@@ -43,6 +44,7 @@ RUN adduser --system --uid 1001 nextjs
 # Copy built application
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
+# Copy public directory contents if they exist
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
 # Set user
 USER nextjs
