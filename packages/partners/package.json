@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "main": "index.ts",
+  "scripts": {
+    "build": "echo 'Partners package - no build needed'",
+    "type-check": "echo 'Partners package - no type check needed'"
+  },
   "dependencies": {
     "zod": "^3.23.8"
   },

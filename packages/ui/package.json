@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "main": "index.ts",
+  "scripts": {
+    "build": "echo 'UI package - no build needed'",
+    "type-check": "echo 'UI package - no type check needed'"
+  },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.1",
     "@radix-ui/react-dropdown-menu": "^2.1.2",
