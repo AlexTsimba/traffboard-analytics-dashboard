@@ -41,6 +41,21 @@ export class PlayersRepository {
     return result[0];
   }
 
+  async findByPlayerIdAndDate(playerId: number, date: string): Promise<Player | undefined> {
+    const result = await this.db.select().from(players)
+      .where(and(eq(players.playerId, playerId), eq(players.date, date)))
+      .limit(1);
+    return result[0];
+  }
+
+  async updateByPlayerIdAndDate(playerId: number, date: string, data: Partial<NewPlayer>): Promise<Player | undefined> {
+    const result = await this.db.update(players)
+      .set({ ...data, updatedAt: new Date() })
+      .where(and(eq(players.playerId, playerId), eq(players.date, date)))
+      .returning();
+    return result[0];
+  }
+
   async findAll(filter?: PlayersFilter, limit = 100, offset = 0): Promise<Player[]> {
     const conditions = filter ? this.buildFilterConditions(filter) : [];
     

@@ -216,106 +216,133 @@ async function processPlayersRow(
   chunk: string[], 
   rowData: string
 ) {
-  const signUpDate = row[getHeaderIndex('sign up date')] || '';
-  const date = row[getHeaderIndex('date')] || signUpDate;
-  
-  if (!signUpDate || !date) {
-    stats.errors++;
-    return;
-  }
-  
-  // Smart date-based logic for players (based on sign up date)
-  if (mode === 'smart' || mode === 'incremental') {
-    if (signUpDate < cutoffDate) {
-      stats.skipped++;
+  try {
+    const signUpDateRaw = row[getHeaderIndex('sign up date')] || '';
+    const dateRaw = row[getHeaderIndex('date')] || signUpDateRaw;
+    
+    if (!signUpDateRaw || !dateRaw) {
+      stats.errors++;
+      console.error(`Missing required dates: signUp=${signUpDateRaw}, date=${dateRaw}`);
       return;
     }
-  }
-  
-  const rowObj = {
-    playerId: parseInt(row[getHeaderIndex('player id')] || '0'),
-    originalPlayerId: parseInt(row[getHeaderIndex('original player id')] || '0'),
-    signUpDate: signUpDate.split(' ')[0], // Remove time part if present
-    firstDepositDate: row[getHeaderIndex('first deposit date')]?.split(' ')[0] || null,
-    campaignId: parseInt(row[getHeaderIndex('campaign id')] || '0'),
-    campaignName: row[getHeaderIndex('campaign name')] || '',
-    playerCountry: row[getHeaderIndex('player country')] || '',
-    tagClickid: row[getHeaderIndex('tag: clickid')] || '',
-    tagOs: row[getHeaderIndex('tag: os')] || '',
-    tagSource: row[getHeaderIndex('tag: source')] || '',
-    tagSub2: row[getHeaderIndex('tag: sub2')] || '',
-    tagWebId: row[getHeaderIndex('tag: webid')] || '',
-    date: date.split(' ')[0], // Remove time part if present
-    partnerId: parseInt(row[getHeaderIndex('partner id')] || '0'),
-    companyName: row[getHeaderIndex('company name')] || '',
-    // partners_email intentionally excluded - not stored for privacy/security
-    partnerTags: row[getHeaderIndex('partner tags')] || '',
-    promoId: parseInt(row[getHeaderIndex('promo id')] || '0') || null,
-    promoCode: row[getHeaderIndex('promo code')] || '',
-    prequalified: parseInt(row[getHeaderIndex('prequalified')] || '0') === 1,
-    duplicate: parseInt(row[getHeaderIndex('duplicate')] || '0') === 1,
-    selfExcluded: parseInt(row[getHeaderIndex('self-excluded')] || '0') === 1,
-    disabled: parseInt(row[getHeaderIndex('disabled')] || '0') === 1,
-    currency: row[getHeaderIndex('currency')] || '',
-    ftdCount: parseInt(row[getHeaderIndex('ftd count')] || '0'),
-    ftdSum: parseFloat(row[getHeaderIndex('ftd sum')] || '0'),
-    depositsCount: parseInt(row[getHeaderIndex('deposits count')] || '0'),
-    depositsSum: parseFloat(row[getHeaderIndex('deposits sum')] || '0'),
-    cashoutsCount: parseInt(row[getHeaderIndex('cashouts count')] || '0'),
-    cashoutsSum: parseFloat(row[getHeaderIndex('cashouts sum')] || '0'),
-    casinoBetsCount: parseInt(row[getHeaderIndex('casino bets count')] || '0'),
-    casinoRealNgr: parseFloat(row[getHeaderIndex('casino real ngr')] || '0'),
-    fixedPerPlayer: parseFloat(row[getHeaderIndex('fixed per player')] || '0'),
-    casinoBetsSum: parseFloat(row[getHeaderIndex('casino bets sum')] || '0'),
-    casinoWinsSum: parseFloat(row[getHeaderIndex('casino wins sum')] || '0'),
-  };
-
-  // Validate required fields
-  if (isNaN(rowObj.playerId) || rowObj.playerId <= 0) {
-    stats.errors++;
-    console.error(`Invalid player ID: ${row[getHeaderIndex('player id')]}`);
-    return;
-  }
-
-  if (isNaN(rowObj.partnerId)) {
-    stats.errors++;
-    console.error(`Invalid partner ID: ${row[getHeaderIndex('partner id')]}`);
-    return;
-  }
-
-  // Validate date formats
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(rowObj.signUpDate)) {
-    stats.errors++;
-    console.error(`Invalid sign up date format: ${rowObj.signUpDate}`);
-    return;
-  }
-
-  // Use upsert logic for players (based on player ID and date)
-  try {
-    // Log the data being processed for debugging
-    if (chunkIndex === 0 && chunk.indexOf(rowData) < 3) {
-      console.log(`Processing players row data:`, rowObj);
+    
+    // Parse dates properly (handle "2023-02-16 00:00:00 UTC" format)
+    const signUpDate = signUpDateRaw.split(' ')[0]; // Extract date part
+    const date = dateRaw.split(' ')[0]; // Extract date part
+    
+    // Validate date format
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(signUpDate) || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      stats.errors++;
+      console.error(`Invalid date format: signUp=${signUpDate}, date=${date}`);
+      return;
     }
     
-    // Check if player record exists for this date
-    const existing = await databaseService.players?.findByPlayerIdAndDate?.(
-      rowObj.playerId, rowObj.date
-    );
+    // Smart date-based logic for players (based on sign up date)
+    if (mode === 'smart' || mode === 'incremental') {
+      if (signUpDate < cutoffDate) {
+        stats.skipped++;
+        return;
+      }
+    }
     
-    if (existing) {
-      // Update existing record
-      await databaseService.players?.updateByPlayerIdAndDate?.(
-        rowObj.playerId, rowObj.date, rowObj
+    // Helper function to parse numeric values safely
+    const parseNumeric = (value: string, defaultValue: number = 0): number => {
+      if (!value || value.trim() === '') return defaultValue;
+      const parsed = parseFloat(value);
+      return isNaN(parsed) ? defaultValue : parsed;
+    };
+    
+    const parseInt = (value: string, defaultValue: number = 0): number => {
+      if (!value || value.trim() === '') return defaultValue;
+      const parsed = Number.parseInt(value);
+      return isNaN(parsed) ? defaultValue : parsed;
+    };
+    
+    // Parse first deposit date if present
+    const firstDepositDateRaw = row[getHeaderIndex('first deposit date')] || '';
+    const firstDepositDate = firstDepositDateRaw ? firstDepositDateRaw.split(' ')[0] : null;
+    
+    const rowObj = {
+      playerId: parseInt(row[getHeaderIndex('player id')] || '0'),
+      originalPlayerId: parseInt(row[getHeaderIndex('original player id')] || '0'),
+      signUpDate,
+      firstDepositDate,
+      campaignId: parseInt(row[getHeaderIndex('campaign id')] || '0'),
+      campaignName: row[getHeaderIndex('campaign name')] || '',
+      playerCountry: (row[getHeaderIndex('player country')] || '').substring(0, 2), // Limit to 2 chars
+      tagClickid: row[getHeaderIndex('tag: clickid')] || '',
+      tagOs: (row[getHeaderIndex('tag: os')] || '').substring(0, 50), // Limit to 50 chars
+      tagSource: row[getHeaderIndex('tag: source')] || '',
+      tagSub2: parseNumeric(row[getHeaderIndex('tag: sub2')] || '0'), // Convert to decimal
+      tagWebId: parseNumeric(row[getHeaderIndex('tag: webid')] || '0'), // Convert to decimal
+      date,
+      partnerId: parseInt(row[getHeaderIndex('partner id')] || '0'),
+      companyName: row[getHeaderIndex('company name')] || '',
+      // partners_email intentionally excluded - not stored for privacy/security
+      partnerTags: row[getHeaderIndex('partner tags')] || '',
+      promoId: parseInt(row[getHeaderIndex('promo id')] || '0') || null,
+      promoCode: (row[getHeaderIndex('promo code')] || '').substring(0, 100), // Limit to 100 chars
+      prequalified: parseInt(row[getHeaderIndex('prequalified')] || '0') === 1,
+      duplicate: parseInt(row[getHeaderIndex('duplicate')] || '0') === 1,
+      selfExcluded: parseInt(row[getHeaderIndex('self-excluded')] || '0') === 1,
+      disabled: parseInt(row[getHeaderIndex('disabled')] || '0') === 1,
+      currency: (row[getHeaderIndex('currency')] || '').substring(0, 3), // Limit to 3 chars
+      ftdCount: parseInt(row[getHeaderIndex('ftd count')] || '0'),
+      ftdSum: parseNumeric(row[getHeaderIndex('ftd sum')] || '0'),
+      depositsCount: parseInt(row[getHeaderIndex('deposits count')] || '0'),
+      depositsSum: parseNumeric(row[getHeaderIndex('deposits sum')] || '0'),
+      cashoutsCount: parseInt(row[getHeaderIndex('cashouts count')] || '0'),
+      cashoutsSum: parseNumeric(row[getHeaderIndex('cashouts sum')] || '0'),
+      casinoBetsCount: parseInt(row[getHeaderIndex('casino bets count')] || '0'),
+      casinoRealNgr: parseNumeric(row[getHeaderIndex('casino real ngr')] || '0'),
+      fixedPerPlayer: parseNumeric(row[getHeaderIndex('fixed per player')] || '0'),
+      casinoBetsSum: parseNumeric(row[getHeaderIndex('casino bets sum')] || '0'),
+      casinoWinsSum: parseNumeric(row[getHeaderIndex('casino wins sum')] || '0'),
+    };
+
+    // Validate required fields
+    if (isNaN(rowObj.playerId) || rowObj.playerId <= 0) {
+      stats.errors++;
+      console.error(`Invalid player ID: ${row[getHeaderIndex('player id')]}`);
+      return;
+    }
+
+    if (isNaN(rowObj.partnerId) || rowObj.partnerId <= 0) {
+      stats.errors++;
+      console.error(`Invalid partner ID: ${row[getHeaderIndex('partner id')]}`);
+      return;
+    }
+
+    // Use upsert logic for players (based on player ID and date)
+    try {
+      // Log the data being processed for debugging (first few rows only)
+      if (chunkIndex === 0 && chunk.indexOf(rowData) < 3) {
+        console.log(`Processing players row data:`, JSON.stringify(rowObj, null, 2));
+      }
+      
+      // Check if player record exists for this date
+      const existing = await databaseService.players.findByPlayerIdAndDate(
+        rowObj.playerId, rowObj.date
       );
-      stats.updated++;
-    } else {
-      // Insert new record
-      await databaseService.players?.create?.(rowObj);
-      stats.inserted++;
+      
+      if (existing) {
+        // Update existing record
+        await databaseService.players.updateByPlayerIdAndDate(
+          rowObj.playerId, rowObj.date, rowObj
+        );
+        stats.updated++;
+      } else {
+        // Insert new record
+        await databaseService.players.create(rowObj);
+        stats.inserted++;
+      }
+    } catch (dbError) {
+      console.error('Database error for players row:', rowObj);
+      console.error('Database error details:', dbError);
+      stats.errors++;
     }
-  } catch (dbError) {
-    console.error('Database error for players row:', rowObj);
-    console.error('Database error details:', dbError);
+  } catch (error) {
+    console.error('Row processing error in processPlayersRow:', error);
     stats.errors++;
   }
 }
