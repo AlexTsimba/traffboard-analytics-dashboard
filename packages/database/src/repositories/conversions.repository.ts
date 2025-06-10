@@ -151,4 +151,35 @@ export class ConversionsRepository {
       ftdCount: item.ftdCount || 0,
     }));
   }
+
+  async getMaxDate(): Promise<string | null> {
+    const result = await this.db.select({
+      maxDate: sql<string>`max(${conversions.date})`.mapWith(String)
+    }).from(conversions);
+    
+    return result[0]?.maxDate || null;
+  }
+
+  async findByCompositeKey(date: string, partnerId: number, campaignId: number, landingId: number): Promise<Conversion | undefined> {
+    const result = await this.db.select().from(conversions)
+      .where(and(
+        eq(conversions.date, date),
+        eq(conversions.foreignPartnerId, partnerId),
+        eq(conversions.foreignCampaignId, campaignId),
+        eq(conversions.foreignLandingId, landingId)
+      )).limit(1);
+    return result[0];
+  }
+
+  async updateByCompositeKey(date: string, partnerId: number, campaignId: number, landingId: number, data: Partial<NewConversion>): Promise<Conversion | undefined> {
+    const result = await this.db.update(conversions)
+      .set({ ...data, updatedAt: new Date() })
+      .where(and(
+        eq(conversions.date, date),
+        eq(conversions.foreignPartnerId, partnerId),
+        eq(conversions.foreignCampaignId, campaignId),
+        eq(conversions.foreignLandingId, landingId)
+      )).returning();
+    return result[0];
+  }
 }

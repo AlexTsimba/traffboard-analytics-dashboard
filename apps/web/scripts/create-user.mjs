@@ -1,14 +1,7 @@
-#!/usr/bin/env node
-
-/**
- * Script to create users manually for internal use
- * Usage: npm run create-user <email> <password>
- */
-
-const { db, users } = require('@traffboard/database');
-const { eq } = require('drizzle-orm');
-const { scrypt, randomBytes } = require('crypto');
-const { promisify } = require('util');
+import { db, users } from '@traffboard/database/index.js';
+import { eq } from 'drizzle-orm';
+import { scrypt, randomBytes } from 'crypto';
+import { promisify } from 'util';
 
 // Local auth implementation
 const scryptAsync = promisify(scrypt);
@@ -64,6 +57,10 @@ async function createUser(email, password) {
 
   } catch (error) {
     console.error('❌ Error creating user:', error.message);
+    if (error.message.includes('relation "users" does not exist')) {
+      console.error('\n🔧 Database tables not created. Run database migrations first:');
+      console.error('   cd packages/database && npm run migrate');
+    }
     console.error('Stack trace:', error.stack);
     process.exit(1);
   }
@@ -72,8 +69,8 @@ async function createUser(email, password) {
 // Parse command line arguments
 const args = process.argv.slice(2);
 if (args.length !== 2) {
-  console.log('Usage: npm run create-user <email> <password>');
-  console.log('Example: npm run create-user admin@company.com securepassword123');
+  console.log('Usage: node scripts/create-user.mjs <email> <password>');
+  console.log('Example: node scripts/create-user.mjs admin@company.com securepassword123');
   process.exit(1);
 }
 

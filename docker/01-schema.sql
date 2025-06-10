@@ -1,0 +1,96 @@
+-- Traffboard Database Schema
+-- Production-matched database structure
+
+-- Create conversions table
+CREATE TABLE IF NOT EXISTS "conversions" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"date" date NOT NULL,
+	"foreign_partner_id" integer NOT NULL,
+	"foreign_campaign_id" integer NOT NULL,
+	"foreign_landing_id" integer NOT NULL,
+	"os_family" varchar(50),
+	"country" varchar(2) NOT NULL,
+	"all_clicks" integer DEFAULT 0,
+	"unique_clicks" integer DEFAULT 0,
+	"registrations_count" integer DEFAULT 0,
+	"ftd_count" integer DEFAULT 0,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+
+-- Create players table
+CREATE TABLE IF NOT EXISTS "players" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"player_id" integer NOT NULL,
+	"original_player_id" integer,
+	"sign_up_date" date,
+	"first_deposit_date" date,
+	"campaign_id" integer,
+	"campaign_name" varchar(255),
+	"player_country" varchar(2),
+	"tag_clickid" varchar(255),
+	"tag_os" varchar(50),
+	"tag_source" varchar(255),
+	"tag_sub2" numeric(10, 2),
+	"tag_web_id" numeric(10, 2),
+	"date" date NOT NULL,
+	"partner_id" integer NOT NULL,
+	"company_name" varchar(255),
+	"partners_email" varchar(255),
+	"partner_tags" text,
+	"promo_id" integer,
+	"promo_code" varchar(100),
+	"prequalified" boolean DEFAULT false,
+	"duplicate" boolean DEFAULT false,
+	"self_excluded" boolean DEFAULT false,
+	"disabled" boolean DEFAULT false,
+	"currency" varchar(3),
+	"ftd_count" integer DEFAULT 0,
+	"ftd_sum" numeric(15, 2) DEFAULT '0',
+	"deposits_count" integer DEFAULT 0,
+	"deposits_sum" numeric(15, 2) DEFAULT '0',
+	"cashouts_count" integer DEFAULT 0,
+	"cashouts_sum" numeric(15, 2) DEFAULT '0',
+	"casino_bets_count" integer DEFAULT 0,
+	"casino_real_ngr" numeric(15, 2) DEFAULT '0',
+	"fixed_per_player" numeric(15, 2) DEFAULT '0',
+	"casino_bets_sum" numeric(15, 2) DEFAULT '0',
+	"casino_wins_sum" numeric(15, 2) DEFAULT '0',
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "players_player_id_unique" UNIQUE("player_id")
+);
+
+-- Create traffic reports table
+CREATE TABLE IF NOT EXISTS "traffic_reports" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"date" date NOT NULL,
+	"foreign_brand_id" integer NOT NULL,
+	"foreign_partner_id" integer NOT NULL,
+	"foreign_campaign_id" integer NOT NULL,
+	"foreign_landing_id" integer NOT NULL,
+	"referrer" varchar(500),
+	"device_type" varchar(50),
+	"user_agent_family" varchar(100),
+	"os_family" varchar(50),
+	"country" varchar(2) NOT NULL,
+	"all_clicks" integer DEFAULT 0,
+	"unique_clicks" integer DEFAULT 0,
+	"registrations_count" integer DEFAULT 0,
+	"ftd_count" integer DEFAULT 0,
+	"deposits_count" integer DEFAULT 0,
+	"cr" numeric(8, 4) DEFAULT '0',
+	"cftd" numeric(8, 4) DEFAULT '0',
+	"cd" numeric(8, 4) DEFAULT '0',
+	"rftd" numeric(8, 4) DEFAULT '0',
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+
+-- Create indexes for performance
+CREATE INDEX IF NOT EXISTS idx_conversions_date ON conversions(date);
+CREATE INDEX IF NOT EXISTS idx_conversions_partner ON conversions(foreign_partner_id);
+CREATE INDEX IF NOT EXISTS idx_conversions_campaign ON conversions(foreign_campaign_id);
+CREATE INDEX IF NOT EXISTS idx_players_date ON players(date);
+CREATE INDEX IF NOT EXISTS idx_players_partner ON players(partner_id);
+CREATE INDEX IF NOT EXISTS idx_players_player_id ON players(player_id);

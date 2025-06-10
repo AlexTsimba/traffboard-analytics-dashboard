@@ -12,7 +12,13 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "type-check": "tsc --noEmit",
-    "create-user": "node scripts/create-user.js"
+    "create-user": "node scripts/create-user.mjs",
+    "db:start": "cd ../.. && ./scripts/db.sh start",
+    "db:stop": "cd ../.. && ./scripts/db.sh stop",
+    "db:restart": "cd ../.. && ./scripts/db.sh restart",
+    "db:reset": "cd ../.. && ./scripts/db.sh reset",
+    "db:logs": "cd ../.. && ./scripts/db.sh logs",
+    "setup:docker": "cp .env.docker .env && npm run db:start"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
