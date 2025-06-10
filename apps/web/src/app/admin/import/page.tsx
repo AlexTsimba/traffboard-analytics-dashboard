@@ -8,6 +8,7 @@ export default function ImportPage() {
   const [isValidating, setIsValidating] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [importResult, setImportResult] = useState<any>(null);
+  const [importMode, setImportMode] = useState<'smart' | 'full'>('smart');
 
   const validateFile = async () => {
     if (!file) return;
@@ -17,7 +18,11 @@ export default function ImportPage() {
     formData.append('dataType', 'conversions');
     
     try {
-      const response = await fetch('/api/imports/csv/validate', { method: 'POST', body: formData });
+      const response = await fetch('/api/imports/csv/validate', { 
+        method: 'POST', 
+        body: formData,
+        credentials: 'include'
+      });
       const result = await response.json();
       setValidation(result);
     } catch (error) {
@@ -32,10 +37,14 @@ export default function ImportPage() {
     setIsImporting(true);
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('mode', 'incremental');
+    formData.append('mode', importMode);
     
     try {
-      const response = await fetch('/api/imports/csv/execute', { method: 'POST', body: formData });
+      const response = await fetch('/api/imports/csv/execute', { 
+        method: 'POST', 
+        body: formData,
+        credentials: 'include'
+      });
       const result = await response.json();
       setImportResult(result);
     } catch (error) {
@@ -63,6 +72,25 @@ export default function ImportPage() {
             Selected: {file.name} ({(file.size / 1024 / 1024).toFixed(2)}MB)
           </div>
         )}
+        
+        {/* Import Mode Selection */}
+        <div className="mt-3 mb-3">
+          <label className="block text-sm font-medium mb-2">Import Mode:</label>
+          <select 
+            value={importMode} 
+            onChange={(e) => setImportMode(e.target.value as 'smart' | 'full')}
+            className="px-3 py-2 border rounded w-full"
+          >
+            <option value="smart">Smart Import (Last 30 days, upsert duplicates)</option>
+            <option value="full">Full Import (All historical data)</option>
+          </select>
+          <div className="text-xs text-gray-500 mt-1">
+            {importMode === 'smart' 
+              ? 'Imports fresh data (last 30 days) and overrides duplicates. Recommended for regular updates.'
+              : 'Imports all data regardless of date. Use for initial data load.'
+            }
+          </div>
+        </div>
         <button
           onClick={validateFile}
           disabled={!file || isValidating}

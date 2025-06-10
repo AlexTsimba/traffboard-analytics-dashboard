@@ -18,8 +18,14 @@ export function middleware(request: NextRequest) {
 
   // For API routes (except auth), require authentication
   if (pathname.startsWith('/api/')) {
+    // Check for cookie-based authentication
+    const accessToken = request.cookies.get('access_token')?.value;
+    const sessionId = request.cookies.get('session_id')?.value;
+    
+    // Also check for Bearer token (fallback)
     const authHeader = request.headers.get('authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
+    
+    if (!accessToken && !sessionId && !authHeader?.startsWith('Bearer ')) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }

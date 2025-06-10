@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { databaseService } from '@traffboard/database';
 
-interface CSVRow {
+interface ConversionsCSVRow {
   date: string;
   foreign_partner_id: number;
   foreign_campaign_id: number;
@@ -14,11 +14,50 @@ interface CSVRow {
   ftd_count: number;
 }
 
+interface PlayersCSVRow {
+  player_id: number;
+  original_player_id: number;
+  sign_up_date: string;
+  first_deposit_date?: string;
+  date: string;
+  partner_id: number;
+  company_name: string;
+  partners_email: string;
+  partner_tags?: string;
+  campaign_id: number;
+  campaign_name: string;
+  promo_id?: number;
+  promo_code?: string;
+  player_country: string;
+  tag_clickid?: string;
+  tag_os?: string;
+  tag_source?: string;
+  tag_sub2?: string;
+  prequalified: number;
+  duplicate: number;
+  self_excluded: number;
+  disabled: number;
+  currency: string;
+  ftd_count: number;
+  ftd_sum: number;
+  deposits_count: number;
+  deposits_sum: number;
+  cashouts_count: number;
+  cashouts_sum: number;
+  casino_bets_count: number;
+  casino_real_ngr: number;
+  fixed_per_player: number;
+  casino_bets_sum: number;
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const userId = request.headers.get('x-user-id');
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Check for authentication via cookies
+    const accessToken = request.cookies.get('access_token')?.value;
+    const sessionId = request.cookies.get('session_id')?.value;
+    
+    if (!accessToken && !sessionId) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
     const formData = await request.formData();
@@ -51,15 +90,34 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'CSV must have header and at least one data row' }, { status: 400 });
     }
 
-    // Validate headers for conversions
-    const expectedHeaders = [
+    // Define expected headers for different CSV types
+    const conversionsHeaders = [
       'date', 'foreign_partner_id', 'foreign_campaign_id', 'foreign_landing_id',
       'os_family', 'country', 'all_clicks', 'unique_clicks', 
       'registrations_count', 'ftd_count'
     ];
+
+    const playersHeaders = [
+      'player id', 'original player id', 'sign up date', 'first deposit date', 'date',
+      'partner id', 'company name', 'partners email', 'partner tags', 'campaign id',
+      'campaign name', 'promo id', 'promo code', 'player country', 'tag: clickid',
+      'tag: os', 'tag: source', 'tag: sub2', 'prequalified', 'duplicate',
+      'self-excluded', 'disabled', 'currency', 'ftd count', 'ftd sum',
+      'deposits count', 'deposits sum', 'cashouts count', 'cashouts sum',
+      'casino bets count', 'casino real ngr', 'fixed per player', 'casino bets sum'
+    ];
     
     const headers = lines[0]?.split(',').map(h => h.trim().toLowerCase()) || [];
-    const missingHeaders = expectedHeaders.filter(h => !headers.includes(h));
+    
+    // Define required headers (subset of all headers that must be present)
+    const requiredHeaders = dataType === 'conversions'
+      ? conversionsHeaders // All conversions headers are required
+      : [ // Essential players headers only
+          'player id', 'sign up date', 'partner id', 'campaign id',
+          'prequalified', 'duplicate', 'self-excluded', 'disabled'
+        ];
+    
+    const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
     
     if (missingHeaders.length > 0) {
       return NextResponse.json({ 
@@ -69,10 +127,13 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Parse sample rows for validation
+    // Parse sample rows for validation based on CSV type
     const dataRows = lines.slice(1, Math.min(11, lines.length)); // First 10 rows
-    const parsedRows: CSVRow[] = [];
+    const parsedRows: (ConversionsCSVRow | PlayersCSVRow)[] = [];
     const errors: string[] = [];
+
+    // Create header index mapping for players CSV
+    const getHeaderIndex = (headerName: string) => headers.indexOf(headerName);
 
     for (let i = 0; i < dataRows.length; i++) {
       const rowData = dataRows[i];
@@ -82,33 +143,85 @@ export async function POST(request: NextRequest) {
       const rowNumber = i + 2; // Row number in CSV (1-indexed + header)
       
       try {
-        const parsedRow: CSVRow = {
-          date: row[0] || '',
-          foreign_partner_id: parseInt(row[1] || '0'),
-          foreign_campaign_id: parseInt(row[2] || '0'),
-          foreign_landing_id: parseInt(row[3] || '0'),
-          os_family: row[4] || '',
-          country: row[5] || '',
-          all_clicks: parseInt(row[6] || '0'),
-          unique_clicks: parseInt(row[7] || '0'),
-          registrations_count: parseInt(row[8] || '0'),
-          ftd_count: parseInt(row[9] || '0'),
-        };
+        if (dataType === 'conversions') {
+          const parsedRow: ConversionsCSVRow = {
+            date: row[0] || '',
+            foreign_partner_id: parseInt(row[1] || '0'),
+            foreign_campaign_id: parseInt(row[2] || '0'),
+            foreign_landing_id: parseInt(row[3] || '0'),
+            os_family: row[4] || '',
+            country: row[5] || '',
+            all_clicks: parseInt(row[6] || '0'),
+            unique_clicks: parseInt(row[7] || '0'),
+            registrations_count: parseInt(row[8] || '0'),
+            ftd_count: parseInt(row[9] || '0'),
+          };
 
-        // Validate date format (YYYY-MM-DD)
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(parsedRow.date)) {
-          errors.push(`Row ${rowNumber}: Invalid date format "${parsedRow.date}". Expected YYYY-MM-DD`);
+          // Validate date format (YYYY-MM-DD)
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(parsedRow.date)) {
+            errors.push(`Row ${rowNumber}: Invalid date format "${parsedRow.date}". Expected YYYY-MM-DD`);
+          }
+          
+          // Validate numeric fields
+          if (isNaN(parsedRow.foreign_partner_id)) {
+            errors.push(`Row ${rowNumber}: Invalid partner_id "${row[1]}"`);
+          }
+          if (isNaN(parsedRow.unique_clicks) || parsedRow.unique_clicks < 0) {
+            errors.push(`Row ${rowNumber}: Invalid unique_clicks "${row[7]}"`);
+          }
+          
+          parsedRows.push(parsedRow);
+        } else {
+          // Players CSV parsing - use header indices for flexible column order
+          const parsedRow: PlayersCSVRow = {
+            player_id: parseInt(row[getHeaderIndex('player id')] || '0'),
+            original_player_id: parseInt(row[getHeaderIndex('original player id')] || '0'),
+            sign_up_date: row[getHeaderIndex('sign up date')] || '',
+            first_deposit_date: row[getHeaderIndex('first deposit date')] || '',
+            date: row[getHeaderIndex('date')] || '',
+            partner_id: parseInt(row[getHeaderIndex('partner id')] || '0'),
+            company_name: row[getHeaderIndex('company name')] || '',
+            partners_email: row[getHeaderIndex('partners email')] || '',
+            partner_tags: row[getHeaderIndex('partner tags')] || '',
+            campaign_id: parseInt(row[getHeaderIndex('campaign id')] || '0'),
+            campaign_name: row[getHeaderIndex('campaign name')] || '',
+            promo_id: parseInt(row[getHeaderIndex('promo id')] || '0') || undefined,
+            promo_code: row[getHeaderIndex('promo code')] || '',
+            player_country: row[getHeaderIndex('player country')] || '',
+            tag_clickid: row[getHeaderIndex('tag: clickid')] || '',
+            tag_os: row[getHeaderIndex('tag: os')] || '',
+            tag_source: row[getHeaderIndex('tag: source')] || '',
+            tag_sub2: row[getHeaderIndex('tag: sub2')] || '',
+            prequalified: parseInt(row[getHeaderIndex('prequalified')] || '0'),
+            duplicate: parseInt(row[getHeaderIndex('duplicate')] || '0'),
+            self_excluded: parseInt(row[getHeaderIndex('self-excluded')] || '0'),
+            disabled: parseInt(row[getHeaderIndex('disabled')] || '0'),
+            currency: row[getHeaderIndex('currency')] || '',
+            ftd_count: parseInt(row[getHeaderIndex('ftd count')] || '0'),
+            ftd_sum: parseFloat(row[getHeaderIndex('ftd sum')] || '0'),
+            deposits_count: parseInt(row[getHeaderIndex('deposits count')] || '0'),
+            deposits_sum: parseFloat(row[getHeaderIndex('deposits sum')] || '0'),
+            cashouts_count: parseInt(row[getHeaderIndex('cashouts count')] || '0'),
+            cashouts_sum: parseFloat(row[getHeaderIndex('cashouts sum')] || '0'),
+            casino_bets_count: parseInt(row[getHeaderIndex('casino bets count')] || '0'),
+            casino_real_ngr: parseFloat(row[getHeaderIndex('casino real ngr')] || '0'),
+            fixed_per_player: parseInt(row[getHeaderIndex('fixed per player')] || '0'),
+            casino_bets_sum: parseFloat(row[getHeaderIndex('casino bets sum')] || '0'),
+          };
+
+          // Validate essential fields for players
+          if (isNaN(parsedRow.player_id) || parsedRow.player_id <= 0) {
+            errors.push(`Row ${rowNumber}: Invalid player_id "${row[getHeaderIndex('player id')]}"`);
+          }
+          if (isNaN(parsedRow.partner_id)) {
+            errors.push(`Row ${rowNumber}: Invalid partner_id "${row[getHeaderIndex('partner id')]}"`);
+          }
+          if (!parsedRow.sign_up_date) {
+            errors.push(`Row ${rowNumber}: Missing sign_up_date`);
+          }
+          
+          parsedRows.push(parsedRow);
         }
-        
-        // Validate numeric fields
-        if (isNaN(parsedRow.foreign_partner_id)) {
-          errors.push(`Row ${rowNumber}: Invalid partner_id "${row[1]}"`);
-        }
-        if (isNaN(parsedRow.unique_clicks) || parsedRow.unique_clicks < 0) {
-          errors.push(`Row ${rowNumber}: Invalid unique_clicks "${row[7]}"`);
-        }
-        
-        parsedRows.push(parsedRow);
       } catch (error) {
         errors.push(`Row ${rowNumber}: Parse error - ${error}`);
       }
@@ -116,28 +229,39 @@ export async function POST(request: NextRequest) {
 
     // Get current date for conflict analysis
     const today = new Date().toISOString().split('T')[0]!;
-    const dates = parsedRows.map(row => row.date);
-    const uniqueDates = [...new Set(dates)];
+    
+    // Extract dates based on CSV type
+    const dates = dataType === 'conversions' 
+      ? parsedRows.map(row => (row as ConversionsCSVRow).date)
+      : parsedRows.map(row => (row as PlayersCSVRow).sign_up_date || (row as PlayersCSVRow).date);
+    
+    const validDates = dates.filter(date => date && /^\d{4}-\d{2}-\d{2}$/.test(date));
+    const uniqueDates = [...new Set(validDates)];
     
     const historical = uniqueDates.filter(date => date < today).length;
     const todayCount = uniqueDates.filter(date => date === today).length;
     const future = uniqueDates.filter(date => date > today).length;
 
-    // Get existing data summary
-    const maxDate = await databaseService.conversions.getMaxDate();
+    // Get existing data summary (for conversions only, players might not have this)
+    const maxDate = dataType === 'conversions' 
+      ? await databaseService.conversions.getMaxDate()
+      : null;
 
     return NextResponse.json({
       success: true,
+      dataType,
       file: {
         name: file.name,
         size: `${(file.size / 1024 / 1024).toFixed(2)}MB`,
         totalRows: lines.length - 1,
         sampleRows: parsedRows.length,
+        headers: headers.length,
       },
       analysis: {
         historical,
         today: todayCount,
         future,
+        validDates: validDates.length,
         maxExistingDate: maxDate,
       },
       errors: errors.slice(0, 10), // First 10 errors

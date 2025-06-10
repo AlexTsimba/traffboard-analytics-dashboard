@@ -1,0 +1,10 @@
+date,foreign_partner_id,foreign_campaign_id,foreign_landing_id,os_family,country,all_clicks,unique_clicks,registrations_count,ftd_count
+2025-06-09,1001,2001,3001,Windows,US,150,120,12,2
+2025-06-09,1002,2002,3002,Android,CA,200,180,18,3
+2025-06-09,1003,2003,3003,iOS,UK,100,90,9,1
+2025-06-10,1001,2001,3001,Windows,US,175,140,14,3
+2025-06-10,1002,2002,3002,Android,CA,220,190,19,4
+2025-06-10,1003,2003,3003,iOS,UK,110,95,10,2
+2025-06-11,1001,2001,3001,Windows,US,180,145,15,3
+2025-06-11,1002,2002,3002,Android,CA,230,200,20,4
+2025-06-11,1003,2003,3003,iOS,UK,115,100,11,2

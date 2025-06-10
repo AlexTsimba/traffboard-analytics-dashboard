@@ -1,20 +1,13 @@
 import { pgTable, serial, varchar, integer, date, timestamp } from 'drizzle-orm/pg-core';
-import { buyers, funnels, trafficSources, campaigns } from './dimensions';
 
 export const conversions = pgTable('conversions', {
   id: serial('id').primaryKey(),
   date: date('date').notNull(),
   
-  // Original partner data (kept for auditability)
+  // Partner data (matches your CSV structure)
   foreignPartnerId: integer('foreign_partner_id').notNull(),
   foreignCampaignId: integer('foreign_campaign_id').notNull(),
   foreignLandingId: integer('foreign_landing_id').notNull(),
-  
-  // Normalized dimensions (for dashboard filtering)
-  buyerId: integer('buyer_id').references(() => buyers.id),
-  funnelId: integer('funnel_id').references(() => funnels.id),
-  sourceId: integer('source_id').references(() => trafficSources.id),
-  campaignId: integer('campaign_id').references(() => campaigns.id),
   
   // Standard fields
   osFamily: varchar('os_family', { length: 50 }),

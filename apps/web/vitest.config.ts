@@ -8,6 +8,14 @@ export default defineConfig({
   test: {
     environment: 'node',
     globals: true,
+    include: ['src/**/*.{test,spec}.{ts,tsx}'], // Only include tests in src/
+    exclude: [
+      'node_modules/**',
+      '.next/**',
+      'dist/**',
+      'tests/**', // Exclude Playwright tests
+      '**/*.config.*'
+    ],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
