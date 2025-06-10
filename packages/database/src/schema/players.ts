@@ -1,8 +1,8 @@
-import { pgTable, serial, integer, varchar, text, date, decimal, boolean, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, serial, integer, varchar, text, date, decimal, boolean, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 
 export const players = pgTable('players', {
   id: serial('id').primaryKey(),
-  playerId: integer('player_id').notNull().unique(),
+  playerId: integer('player_id').notNull(), // Removed .unique() - allow same player on different dates
   originalPlayerId: integer('original_player_id'),
   signUpDate: date('sign_up_date'),
   firstDepositDate: date('first_deposit_date'),
@@ -39,7 +39,10 @@ export const players = pgTable('players', {
   casinoWinsSum: decimal('casino_wins_sum', { precision: 15, scale: 2 }).default('0'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+}, (table) => ({
+  // Composite unique constraint: same player can exist on different dates
+  playerDateUnique: uniqueIndex('player_date_unique').on(table.playerId, table.date),
+}));
 
 export type Player = typeof players.$inferSelect;
 export type NewPlayer = typeof players.$inferInsert;

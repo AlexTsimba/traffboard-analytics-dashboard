@@ -320,6 +320,11 @@ async function processPlayersRow(
         console.log(`Processing players row data:`, JSON.stringify(rowObj, null, 2));
       }
       
+      // Additional validation logging for debugging
+      if (stats.errors < 10) { // Log first 10 errors for debugging
+        console.log(`Row validation - Player ID: ${rowObj.playerId}, Partner ID: ${rowObj.partnerId}, Sign up date: ${rowObj.signUpDate}`);
+      }
+      
       // Check if player record exists for this date
       const existing = await databaseService.players.findByPlayerIdAndDate(
         rowObj.playerId, rowObj.date
@@ -339,6 +344,21 @@ async function processPlayersRow(
     } catch (dbError) {
       console.error('Database error for players row:', rowObj);
       console.error('Database error details:', dbError);
+      
+      // Log specific error types for debugging
+      if (dbError && typeof dbError === 'object' && 'message' in dbError) {
+        const errorMessage = (dbError as Error).message;
+        if (errorMessage.includes('duplicate key')) {
+          console.error(`Duplicate key error for Player ID ${rowObj.playerId} on date ${rowObj.date}`);
+        } else if (errorMessage.includes('violates foreign key')) {
+          console.error(`Foreign key violation for Player ID ${rowObj.playerId}`);
+        } else if (errorMessage.includes('violates check constraint')) {
+          console.error(`Check constraint violation for Player ID ${rowObj.playerId}`);
+        } else if (errorMessage.includes('invalid input syntax')) {
+          console.error(`Invalid data format for Player ID ${rowObj.playerId}:`, errorMessage);
+        }
+      }
+      
       stats.errors++;
     }
   } catch (error) {
