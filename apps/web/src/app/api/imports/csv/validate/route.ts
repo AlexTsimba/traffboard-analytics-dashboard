@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
     // Define required headers (subset of all headers that must be present)
     const requiredHeaders = dataType === 'conversions'
       ? conversionsHeaders // All conversions headers are required
-      : [ // Essential players headers only
+      : [ // Essential players headers only (lowercase for comparison)
           'player id', 'sign up date', 'partner id', 'campaign id',
           'prequalified', 'duplicate', 'self-excluded', 'disabled'
         ];
@@ -123,7 +123,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ 
         error: 'Missing required headers', 
         missing: missingHeaders,
-        found: headers
+        found: headers,
+        dataType,
+        requiredHeaders,
+        hint: dataType === 'players' 
+          ? 'Ensure your CSV has headers like: Player ID, Sign up date, Partner ID, Campaign ID, etc.'
+          : 'Ensure your CSV has headers like: date, foreign_partner_id, foreign_campaign_id, etc.'
       }, { status: 400 });
     }
 
