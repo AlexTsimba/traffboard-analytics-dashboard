@@ -17,7 +17,7 @@ export const players = pgTable('players', {
   date: date('date').notNull(),
   partnerId: integer('partner_id').notNull(),
   companyName: varchar('company_name', { length: 255 }),
-  partnersEmail: varchar('partners_email', { length: 255 }),
+  // partnersEmail removed for privacy/security - not stored in database
   partnerTags: text('partner_tags'),
   promoId: integer('promo_id'),
   promoCode: varchar('promo_code', { length: 100 }),

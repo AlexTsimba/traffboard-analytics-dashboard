@@ -19,20 +19,21 @@ interface PlayersCSVRow {
   original_player_id: number;
   sign_up_date: string;
   first_deposit_date?: string;
-  date: string;
-  partner_id: number;
-  company_name: string;
-  partners_email: string;
-  partner_tags?: string;
   campaign_id: number;
   campaign_name: string;
-  promo_id?: number;
-  promo_code?: string;
   player_country: string;
   tag_clickid?: string;
   tag_os?: string;
   tag_source?: string;
   tag_sub2?: string;
+  tag_webid?: string;
+  date: string;
+  partner_id: number;
+  company_name: string;
+  // partners_email excluded - not stored for privacy/security
+  partner_tags?: string;
+  promo_id?: number;
+  promo_code?: string;
   prequalified: number;
   duplicate: number;
   self_excluded: number;
@@ -48,6 +49,7 @@ interface PlayersCSVRow {
   casino_real_ngr: number;
   fixed_per_player: number;
   casino_bets_sum: number;
+  casino_wins_sum: number;
 }
 
 export async function POST(request: NextRequest) {
@@ -183,20 +185,21 @@ export async function POST(request: NextRequest) {
             original_player_id: parseInt(row[getHeaderIndex('original player id')] || '0'),
             sign_up_date: row[getHeaderIndex('sign up date')] || '',
             first_deposit_date: row[getHeaderIndex('first deposit date')] || '',
-            date: row[getHeaderIndex('date')] || '',
-            partner_id: parseInt(row[getHeaderIndex('partner id')] || '0'),
-            company_name: row[getHeaderIndex('company name')] || '',
-            partners_email: row[getHeaderIndex('partners email')] || '',
-            partner_tags: row[getHeaderIndex('partner tags')] || '',
             campaign_id: parseInt(row[getHeaderIndex('campaign id')] || '0'),
             campaign_name: row[getHeaderIndex('campaign name')] || '',
-            promo_id: parseInt(row[getHeaderIndex('promo id')] || '0') || undefined,
-            promo_code: row[getHeaderIndex('promo code')] || '',
             player_country: row[getHeaderIndex('player country')] || '',
             tag_clickid: row[getHeaderIndex('tag: clickid')] || '',
             tag_os: row[getHeaderIndex('tag: os')] || '',
             tag_source: row[getHeaderIndex('tag: source')] || '',
             tag_sub2: row[getHeaderIndex('tag: sub2')] || '',
+            tag_webid: row[getHeaderIndex('tag: webid')] || '',
+            date: row[getHeaderIndex('date')] || '',
+            partner_id: parseInt(row[getHeaderIndex('partner id')] || '0'),
+            company_name: row[getHeaderIndex('company name')] || '',
+            // partners_email intentionally skipped - not stored for privacy/security
+            partner_tags: row[getHeaderIndex('partner tags')] || '',
+            promo_id: parseInt(row[getHeaderIndex('promo id')] || '0') || undefined,
+            promo_code: row[getHeaderIndex('promo code')] || '',
             prequalified: parseInt(row[getHeaderIndex('prequalified')] || '0'),
             duplicate: parseInt(row[getHeaderIndex('duplicate')] || '0'),
             self_excluded: parseInt(row[getHeaderIndex('self-excluded')] || '0'),
@@ -212,6 +215,7 @@ export async function POST(request: NextRequest) {
             casino_real_ngr: parseFloat(row[getHeaderIndex('casino real ngr')] || '0'),
             fixed_per_player: parseInt(row[getHeaderIndex('fixed per player')] || '0'),
             casino_bets_sum: parseFloat(row[getHeaderIndex('casino bets sum')] || '0'),
+            casino_wins_sum: parseFloat(row[getHeaderIndex('casino wins sum')] || '0'),
           };
 
           // Validate essential fields for players
