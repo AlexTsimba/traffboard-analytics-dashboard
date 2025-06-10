@@ -9,13 +9,14 @@ export default function ImportPage() {
   const [isImporting, setIsImporting] = useState(false);
   const [importResult, setImportResult] = useState<any>(null);
   const [importMode, setImportMode] = useState<'smart' | 'full'>('smart');
+  const [dataType, setDataType] = useState<'conversions' | 'players'>('players'); // Default to players
 
   const validateFile = async () => {
     if (!file) return;
     setIsValidating(true);
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('dataType', 'conversions');
+    formData.append('dataType', dataType); // Use state instead of hardcoded 'conversions'
     
     try {
       const response = await fetch('/api/imports/csv/validate', { 
@@ -37,6 +38,7 @@ export default function ImportPage() {
     setIsImporting(true);
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('dataType', dataType); // Add dataType to import as well
     formData.append('mode', importMode);
     
     try {
@@ -72,6 +74,29 @@ export default function ImportPage() {
             Selected: {file.name} ({(file.size / 1024 / 1024).toFixed(2)}MB)
           </div>
         )}
+        
+        {/* Data Type Selection */}
+        <div className="mt-3 mb-3">
+          <label className="block text-sm font-medium mb-2">Data Type:</label>
+          <select 
+            value={dataType} 
+            onChange={(e) => {
+              setDataType(e.target.value as 'conversions' | 'players');
+              setValidation(null); // Clear validation when data type changes
+              setImportResult(null); // Clear import result as well
+            }}
+            className="px-3 py-2 border rounded w-full"
+          >
+            <option value="players">Players Data (35 columns with Player ID, Sign up date, etc.)</option>
+            <option value="conversions">Conversions Data (10 columns with date, clicks, registrations, etc.)</option>
+          </select>
+          <div className="text-xs text-gray-500 mt-1">
+            {dataType === 'players' 
+              ? 'Player data with demographics, deposits, bets, and performance metrics.'
+              : 'Traffic conversion data with clicks, registrations, and FTD metrics.'
+            }
+          </div>
+        </div>
         
         {/* Import Mode Selection */}
         <div className="mt-3 mb-3">

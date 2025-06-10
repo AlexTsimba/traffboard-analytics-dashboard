@@ -126,6 +126,7 @@ export async function POST(request: NextRequest) {
         error: 'Missing required headers', 
         missing: missingHeaders,
         found: headers,
+        foundCount: headers.length,
         dataType,
         requiredHeaders,
         hint: dataType === 'players' 
