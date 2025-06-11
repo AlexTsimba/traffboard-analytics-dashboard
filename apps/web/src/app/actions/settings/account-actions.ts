@@ -6,7 +6,6 @@
 
 'use server'
 
-import bcrypt from 'bcryptjs'
 import type { ActionState } from './types'
 import { withErrorHandling } from './utils'
 
@@ -15,7 +14,7 @@ import { withErrorHandling } from './utils'
  * Requires password verification and explicit confirmation
  */
 export async function deleteAccountAction(
-  prevState: ActionState,
+  _prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
   const password = formData.get('password') as string || ''
@@ -37,7 +36,7 @@ export async function deleteAccountAction(
   // Use centralized error handling wrapper
   return await withErrorHandling(
     async (user) => {
-      const { databaseService } = await import('@repo/database')
+      const { databaseService } = await import('@traffboard/database')
       const userIdNum = parseInt(user.id, 10)
       
       // Verify password using database
@@ -74,7 +73,7 @@ export async function deleteAccountAction(
 export async function exportUserDataAction(): Promise<ActionState> {
   // Use centralized error handling wrapper
   return await withErrorHandling(
-    async (user) => {
+    async (_user) => {
       // Generate export (this would create a downloadable file)
       const exportId = `user_export_${Date.now()}`
 

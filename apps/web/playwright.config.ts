@@ -15,7 +15,7 @@ export default defineConfig({
     ['html', { open: 'never' }],
     ['json', { outputFile: 'test-results/results.json' }],
     ['junit', { outputFile: 'test-results/junit.xml' }],
-    ...(process.env.CI ? [['github']] : [['list']]),
+    ...(process.env.CI ? [['github'] as const] : [['list'] as const]),
   ],
   
   use: {

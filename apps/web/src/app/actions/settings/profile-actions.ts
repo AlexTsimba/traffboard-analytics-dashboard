@@ -7,7 +7,6 @@
 'use server'
 
 import { z } from 'zod'
-import bcrypt from 'bcryptjs'
 import type { ActionState, UserProfile } from './types'
 import { withErrorHandling, parseFormData, formatValidationErrors } from './utils'
 
@@ -28,12 +27,20 @@ const passwordChangeSchema = z.object({
   path: ["confirmPassword"],
 })
 
+// Type for profile update data (only the fields that can be updated)
+type ProfileUpdateData = {
+  name: string
+  email: string
+  timezone: string
+  language: string
+}
+
 // Database operations using actual Drizzle ORM implementation
 async function updateUserProfile(
   userId: string,
-  updates: Partial<UserProfile>
+  updates: ProfileUpdateData
 ): Promise<void> {
-  const { databaseService } = await import('@repo/database')
+  const { databaseService } = await import('@traffboard/database')
   const userIdNum = parseInt(userId, 10)
   
   // Update user email if provided
@@ -41,16 +48,12 @@ async function updateUserProfile(
     await databaseService.users.updateEmail(userIdNum, updates.email)
   }
   
-  // Update profile information
-  const profileData = {
+  // Update profile information using validated data
+  await databaseService.userProfiles.upsert({
+    userId: userIdNum,
     name: updates.name,
     timezone: updates.timezone,
     language: updates.language,
-  }
-  
-  await databaseService.userProfiles.upsert({
-    userId: userIdNum,
-    ...profileData,
   })
 }
 
@@ -58,7 +61,7 @@ async function updateUserPassword(
   userId: string,
   newPassword: string
 ): Promise<void> {
-  const { databaseService } = await import('@repo/database')
+  const { databaseService } = await import('@traffboard/database')
   const userIdNum = parseInt(userId, 10)
   
   // Update password (repository will handle hashing)
@@ -70,7 +73,7 @@ async function updateUserPassword(
  * Uses centralized error handling to eliminate try-catch duplication
  */
 export async function updateUserProfileAction(
-  prevState: ActionState,
+  _prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
   // Parse form data using centralized utility
@@ -105,7 +108,7 @@ export async function updateUserProfileAction(
  * Uses centralized error handling and validation
  */
 export async function changePasswordAction(
-  prevState: ActionState,
+  _prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
   // Parse form data using centralized utility
@@ -124,7 +127,7 @@ export async function changePasswordAction(
   // Use centralized error handling wrapper
   return await withErrorHandling(
     async (user) => {
-      const { databaseService } = await import('@repo/database')
+      const { databaseService } = await import('@traffboard/database')
       
       // Verify current password using database
       const isValidPassword = await databaseService.users.verifyPassword(

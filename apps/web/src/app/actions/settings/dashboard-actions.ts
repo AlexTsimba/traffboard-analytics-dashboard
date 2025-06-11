@@ -25,7 +25,7 @@ async function updateDashboardPreferences(
   userId: string,
   preferences: DashboardPreferences
 ): Promise<void> {
-  const { databaseService } = await import('@repo/database')
+  const { databaseService } = await import('@traffboard/database')
   const userIdNum = parseInt(userId, 10)
   
   await databaseService.dashboardPreferences.upsert({
@@ -39,7 +39,7 @@ async function updateDashboardPreferences(
  * Uses centralized error handling and revalidates both settings and dashboard pages
  */
 export async function updateDashboardPreferencesAction(
-  prevState: ActionState,
+  _prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
   // Parse form data using centralized utility

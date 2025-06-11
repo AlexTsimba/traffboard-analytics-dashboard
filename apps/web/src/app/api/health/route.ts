@@ -1,6 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createTypedHandler } from '@/lib/type-safety';
 import { getHealthMetrics } from '@/lib/advanced-middleware';
 import { databaseService } from '@traffboard/database';
 
@@ -53,10 +52,8 @@ const healthResponseSchema = z.object({
   })),
 });
 
-// Health check handler
-const healthHandler = createTypedHandler({
-  outputSchema: healthResponseSchema,
-  handler: async ({ request }) => {
+// Health check handler function
+async function healthCheck(): Promise<z.infer<typeof healthResponseSchema>> {
     const startTime = Date.now();
     const checks: Array<{ name: string; status: 'pass' | 'fail' | 'warn'; message?: string; duration?: number }> = [];
 
@@ -221,10 +218,36 @@ const healthHandler = createTypedHandler({
       },
       checks,
     };
-  },
-});
+}
 
-export const GET = healthHandler;
+export async function GET(): Promise<NextResponse> {
+  try {
+    const healthData = await healthCheck();
+    
+    // Validate the response against our schema
+    const validatedData = healthResponseSchema.parse(healthData);
+    
+    return NextResponse.json(validatedData, {
+      status: healthData.status === 'unhealthy' ? 503 : 200,
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      },
+    });
+  } catch (error) {
+    console.error('Health check error:', error);
+    
+    return NextResponse.json(
+      {
+        status: 'unhealthy',
+        timestamp: new Date().toISOString(),
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
+  }
+}
 
 // Disable caching for health checks to get real-time status
 export const dynamic = 'force-dynamic';

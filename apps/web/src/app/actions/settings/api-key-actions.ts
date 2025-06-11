@@ -24,7 +24,7 @@ async function generateAPIKey(
   permissions: string[],
   expiresIn: string
 ): Promise<APIKey> {
-  const { databaseService } = await import('@repo/database')
+  const { databaseService } = await import('@traffboard/database')
   const userIdNum = parseInt(userId, 10)
   
   let expiresAt: Date | undefined
@@ -45,13 +45,13 @@ async function generateAPIKey(
     name: result.name,
     key: result.key, // This includes the actual key for one-time display
     permissions: result.permissions,
-    expiresAt: result.expiresAt,
+    expiresAt: result.expiresAt ?? undefined, // Convert null to undefined
     createdAt: result.createdAt!,
   }
 }
 
 async function revokeAPIKey(userId: string, keyId: string): Promise<void> {
-  const { databaseService } = await import('@repo/database')
+  const { databaseService } = await import('@traffboard/database')
   const userIdNum = parseInt(userId, 10)
   const keyIdNum = parseInt(keyId, 10)
   
@@ -63,7 +63,7 @@ async function revokeAPIKey(userId: string, keyId: string): Promise<void> {
  * Uses centralized error handling and validation
  */
 export async function generateAPIKeyAction(
-  prevState: ActionState,
+  _prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
   // Parse form data using centralized utility
@@ -107,7 +107,7 @@ export async function generateAPIKeyAction(
  * Validates required parameters and uses centralized error handling
  */
 export async function revokeAPIKeyAction(
-  prevState: ActionState,
+  _prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
   const keyId = formData.get('keyId') as string || ''

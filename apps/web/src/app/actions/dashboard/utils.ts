@@ -39,7 +39,7 @@ export async function saveUserPreferences(
   _userId: string,
   preferences: Record<string, any>
 ): Promise<void> {
-  // TODO: Replace with actual database operation using @repo/database
+  // TODO: Replace with actual database operation using @traffboard/database
   // This would save to user preferences table
   // For now, just simulate the operation
   console.log('Saving user preferences:', preferences)

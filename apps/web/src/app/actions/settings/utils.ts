@@ -53,7 +53,7 @@ export async function withErrorHandling<T>(
   } catch (error) {
     console.error('Settings action error:', error)
     return {
-      message: options.errorMessage || 'Operation failed. Please try again.',
+      message: errorMessage,
     }
   }
 }

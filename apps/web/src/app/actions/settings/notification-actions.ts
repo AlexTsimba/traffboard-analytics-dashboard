@@ -25,7 +25,7 @@ async function updateNotificationSettings(
   userId: string,
   settings: NotificationSettings
 ): Promise<void> {
-  const { databaseService } = await import('@repo/database')
+  const { databaseService } = await import('@traffboard/database')
   const userIdNum = parseInt(userId, 10)
   
   await databaseService.notificationSettings.upsert({
@@ -39,7 +39,7 @@ async function updateNotificationSettings(
  * Uses centralized error handling and validation patterns
  */
 export async function updateNotificationSettingsAction(
-  prevState: ActionState,
+  _prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
   // Parse form data using centralized utility

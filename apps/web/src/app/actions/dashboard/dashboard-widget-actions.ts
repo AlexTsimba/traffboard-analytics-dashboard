@@ -123,7 +123,7 @@ export async function createMetricAlertAction(
     const userId = getCurrentUserId()
     const alertId = `alert_${Date.now()}`
     
-    // TODO: Replace with actual database operation using @repo/database
+    // TODO: Replace with actual database operation using @traffboard/database
     // This would save to metric_alerts table with:
     // - userId, alertId, metricName, threshold, condition, frequency, email
     // - isActive, createdAt, triggeredAt, etc.

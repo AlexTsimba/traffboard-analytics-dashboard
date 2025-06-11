@@ -138,7 +138,7 @@ async function updateDashboardPreferences(
 }
 
 async function generateAPIKey(
-  userId: string,
+  _userId: string,
   name: string,
   permissions: string[],
   expiresIn: string
@@ -171,7 +171,7 @@ async function revokeAPIKey(userId: string, keyId: string): Promise<void> {
  * Server Action for updating user profile
  */
 export async function updateUserProfileAction(
-  prevState: ActionState,
+  _prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
   try {
@@ -222,7 +222,7 @@ export async function updateUserProfileAction(
  * Server Action for changing user password
  */
 export async function changePasswordAction(
-  prevState: ActionState,
+  _prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
   try {
@@ -283,7 +283,7 @@ export async function changePasswordAction(
  * Server Action for updating notification settings
  */
 export async function updateNotificationSettingsAction(
-  prevState: ActionState,
+  _prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
   try {
@@ -336,7 +336,7 @@ export async function updateNotificationSettingsAction(
  * Server Action for updating dashboard preferences
  */
 export async function updateDashboardPreferencesAction(
-  prevState: ActionState,
+  _prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
   try {
@@ -390,7 +390,7 @@ export async function updateDashboardPreferencesAction(
  * Server Action for generating API key
  */
 export async function generateAPIKeyAction(
-  prevState: ActionState,
+  _prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
   try {
@@ -445,7 +445,7 @@ export async function generateAPIKeyAction(
  * Server Action for revoking API key
  */
 export async function revokeAPIKeyAction(
-  prevState: ActionState,
+  _prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
   try {
@@ -487,7 +487,7 @@ export async function revokeAPIKeyAction(
  * Server Action for deleting user account
  */
 export async function deleteAccountAction(
-  prevState: ActionState,
+  _prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
   try {
