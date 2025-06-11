@@ -1,61 +1,128 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { z } from 'zod';
 import { databaseService } from '@traffboard/database';
 import { conversionsQuerySchema } from '@/lib/validations/analytics';
+import { createTypedHandler } from '@/lib/type-safety';
+import { withCache, CacheConfigBuilder } from '@/lib/cache';
+import { ErrorResponseBuilder } from '@/lib/error-handler';
+import { buildRequestContext, logRequest } from '@/lib/advanced-middleware';
 
-export async function GET(request: NextRequest) {
-  try {
-    const userId = request.headers.get('x-user-id');
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+// Enhanced conversions response schema
+const conversionsResponseSchema = z.object({
+  data: z.array(z.object({
+    id: z.number(),
+    date: z.string(),
+    foreignPartnerId: z.number(),
+    foreignCampaignId: z.number(),
+    foreignLandingId: z.number(),
+    osFamily: z.string(),
+    country: z.string(),
+    allClicks: z.number(),
+    uniqueClicks: z.number(),
+    registrationsCount: z.number(),
+    ftdCount: z.number(),
+  })),
+  aggregates: z.object({
+    totalUniqueClicks: z.number(),
+    totalRegistrations: z.number(),
+    totalFtdCount: z.number(),
+    conversionRate: z.number(),
+    ftdRate: z.number(),
+  }),
+  pagination: z.object({
+    page: z.number(),
+    limit: z.number(),
+    total: z.number(),
+    totalPages: z.number(),
+    hasMore: z.boolean(),
+  }),
+  filters: z.record(z.any()),
+});
 
-    const { searchParams } = new URL(request.url);
+// Type-safe handler with enhanced error handling and caching
+const getConversionsHandler = createTypedHandler({
+  inputSchema: conversionsQuerySchema,
+  outputSchema: conversionsResponseSchema,
+  handler: async ({ data: query, request, userId, userRole }) => {
+    const startTime = Date.now();
+    const context = buildRequestContext(request);
     
-    // Validate query parameters
-    const validation = conversionsQuerySchema.safeParse(
-      Object.fromEntries(searchParams.entries())
-    );
-    
-    if (!validation.success) {
-      return NextResponse.json({ 
-        error: 'Invalid parameters', 
-        details: validation.error.issues 
-      }, { status: 400 });
+    try {
+      // Validate authentication
+      if (!userId) {
+        throw ErrorResponseBuilder.authenticationError('User ID not found', context.requestId);
+      }
+
+      // Build database filter with validated parameters
+      const filter: any = {};
+      if (query?.dateFrom) filter.dateFrom = new Date(query.dateFrom);
+      if (query?.dateTo) filter.dateTo = new Date(query.dateTo);
+      if (query?.countries) filter.countries = query.countries.split(',');
+      if (query?.osFamily) filter.osFamily = query.osFamily.split(',');
+      if (query?.partnerId) filter.partnerId = query.partnerId;
+      if (query?.campaignId) filter.campaignId = query.campaignId;
+      if (query?.landingId) filter.landingId = query.landingId;
+
+      const page = query?.page || 1;
+      const limit = query?.limit || 50;
+      const offset = (page - 1) * limit;
+
+      // Execute database queries with error handling
+      const [conversions, aggregates, total] = await Promise.all([
+        databaseService.conversions.findAll(filter, limit, offset)
+          .catch(error => {
+            throw ErrorResponseBuilder.databaseError(error, 'fetch conversions', context.requestId);
+          }),
+        databaseService.conversions.getAggregates(filter)
+          .catch(error => {
+            throw ErrorResponseBuilder.databaseError(error, 'fetch aggregates', context.requestId);
+          }),
+        databaseService.conversions.count(filter)
+          .catch(error => {
+            throw ErrorResponseBuilder.databaseError(error, 'count conversions', context.requestId);
+          }),
+      ]);
+
+      const totalPages = Math.ceil(total / limit);
+      const hasMore = page < totalPages;
+
+      const result = {
+        data: conversions,
+        aggregates,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasMore,
+        },
+        filters: filter,
+      };
+
+      // Log successful request
+      const responseTime = Date.now() - startTime;
+      logRequest(context, { status: 200, responseTime });
+
+      return result;
+
+    } catch (error) {
+      // Log error request
+      const responseTime = Date.now() - startTime;
+      logRequest(context, { status: 500, responseTime });
+      
+      throw error;
     }
+  },
+});
 
-    const query = validation.data;
-    const offset = (query.page - 1) * query.limit;
+// Apply caching to the handler
+export const GET = withCache(getConversionsHandler, {
+  profile: 'STANDARD',
+  additionalTags: ['conversions-data'],
+  private: false,
+  mustRevalidate: false,
+});
 
-    // Build enhanced filter
-    const filter: any = {};
-    if (query.dateFrom) filter.dateFrom = new Date(query.dateFrom);
-    if (query.dateTo) filter.dateTo = new Date(query.dateTo);
-    if (query.countries) filter.countries = query.countries.split(',');
-    if (query.osFamily) filter.osFamily = query.osFamily.split(',');
-    if (query.partnerId) filter.partnerId = query.partnerId;
-    if (query.campaignId) filter.campaignId = query.campaignId;
-    if (query.landingId) filter.landingId = query.landingId;
-
-    const [conversions, aggregates, total] = await Promise.all([
-      databaseService.conversions.findAll(filter, query.limit, offset),
-      databaseService.conversions.getAggregates(filter),
-      databaseService.conversions.count(filter),
-    ]);
-
-    return NextResponse.json({
-      data: conversions,
-      aggregates,
-      pagination: {
-        page: query.page,
-        limit: query.limit,
-        total,
-        totalPages: Math.ceil(total / query.limit),
-      },
-      filters: filter,
-    });
-
-  } catch (error) {
-    console.error('Conversions API error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
+// ISR configuration for this route
+export const revalidate = 900; // 15 minutes
+export const dynamic = 'force-dynamic'; // Ensure fresh data for filters

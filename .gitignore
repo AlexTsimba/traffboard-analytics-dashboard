@@ -16,6 +16,8 @@ out/
 
 # Environment variables
 .env
+.env.local
+.env.production
 
 # Editor directories and files
 .idea
@@ -28,6 +30,7 @@ out/
 
 # OS specific
 .DS_Store
+Thumbs.db
 
 # Task files
 tasks.json
@@ -35,6 +38,21 @@ tasks/
 
 # Turbo cache
 .turbo/
+
+# Test artifacts
+coverage/
+.nyc_output
+test-results/
+playwright-report/
+
+# Development scripts (optional - uncomment to exclude)
+# scripts/database/*.js
+# scripts/database/*.js.map
+
+# Large user data files (exclude actual user CSVs, keep test samples)
+/user_data_*.csv
+/real_*.csv
+/production_*.csv
 
 # AI Assistant folders and files
 .roo/

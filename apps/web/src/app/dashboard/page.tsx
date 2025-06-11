@@ -1,6 +1,9 @@
 import { databaseService } from "@traffboard/database";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+// Enable ISR with 1-hour revalidation for analytics overview
+export const revalidate = 3600; // 1 hour in seconds
+
 export default async function DashboardPage() {
   const [conversionsData, playersData] = await Promise.all([
     databaseService.conversions.getAggregates(),

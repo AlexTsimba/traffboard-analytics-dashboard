@@ -45,8 +45,11 @@ export async function POST(request: NextRequest) {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const cutoffDate = thirtyDaysAgo.toISOString().split('T')[0]!;
     
-    console.log(`Import mode: ${mode}, Data type: ${dataType}`);
-    console.log(`Today: ${today}, Cutoff date: ${cutoffDate}`);
+    // Production logging: Import configuration
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Import mode: ${mode}, Data type: ${dataType}`);
+      console.log(`Today: ${today}, Cutoff date: ${cutoffDate}`);
+    }
     
     const stats: ImportStats = {
       totalRows: dataRows.length,
@@ -66,14 +69,18 @@ export async function POST(request: NextRequest) {
       chunks.push(dataRows.slice(i, i + CHUNK_SIZE));
     }
 
-    console.log(`Processing ${dataRows.length} rows in ${chunks.length} chunks of ${CHUNK_SIZE}`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Processing ${dataRows.length} rows in ${chunks.length} chunks of ${CHUNK_SIZE}`);
+    }
 
     // Process each chunk sequentially to avoid connection pool exhaustion
     for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex++) {
       const chunk = chunks[chunkIndex];
       if (!chunk) continue;
       
-      console.log(`Processing chunk ${chunkIndex + 1}/${chunks.length} (${chunk.length} rows)`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`Processing chunk ${chunkIndex + 1}/${chunks.length} (${chunk.length} rows)`);
+      }
       
       // Process each row in the chunk sequentially
       for (const rowData of chunk) {
@@ -83,7 +90,7 @@ export async function POST(request: NextRequest) {
           if (dataType === 'conversions') {
             await processConversionsRow(row, mode, cutoffDate, stats, chunkIndex, chunk, rowData);
           } else {
-            await processPlayersRow(row, headers, getHeaderIndex, mode, cutoffDate, stats, chunkIndex, chunk, rowData);
+            await processPlayersRow(row, getHeaderIndex, mode, cutoffDate, stats, chunkIndex, chunk, rowData);
           }
           
         } catch (error) {
@@ -92,14 +99,18 @@ export async function POST(request: NextRequest) {
         }
       }
       
-      // Longer delay between chunks to prevent database overload
+      // Delay between chunks to prevent database overload
       if (chunkIndex < chunks.length - 1) {
-        console.log(`Completed chunk ${chunkIndex + 1}, waiting before next chunk...`);
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`Completed chunk ${chunkIndex + 1}, waiting before next chunk...`);
+        }
         await new Promise(resolve => setTimeout(resolve, 500)); // 500ms delay
       }
     }
 
-    console.log('Import completed:', stats);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Import completed:', stats);
+    }
 
     return NextResponse.json({
       success: true,
@@ -178,7 +189,7 @@ async function processConversionsRow(
   // Use upsert logic for all fresh data (prevents duplicates)
   try {
     // Log the data being processed for debugging
-    if (chunkIndex === 0 && chunk.indexOf(rowData) < 3) {
+    if (process.env.NODE_ENV === 'development' && chunkIndex === 0 && chunk.indexOf(rowData) < 3) {
       console.log(`Processing conversions row data:`, rowObj);
     }
     
@@ -207,7 +218,6 @@ async function processConversionsRow(
 // Process players row (excluding email for privacy/security)
 async function processPlayersRow(
   row: string[], 
-  headers: string[], 
   getHeaderIndex: (name: string) => number,
   mode: string, 
   cutoffDate: string, 
@@ -227,8 +237,15 @@ async function processPlayersRow(
     }
     
     // Parse dates properly (handle "2023-02-16 00:00:00 UTC" format)
-    const signUpDate = signUpDateRaw.split(' ')[0]; // Extract date part
-    const date = dateRaw.split(' ')[0]; // Extract date part
+    const signUpDate = signUpDateRaw.split(' ')[0] || ''; // Extract date part
+    const date = dateRaw.split(' ')[0] || ''; // Extract date part
+    
+    // Validate that we have valid dates after parsing
+    if (!signUpDate || !date) {
+      stats.errors++;
+      console.error(`Failed to parse dates: signUp=${signUpDate}, date=${date}`);
+      return;
+    }
     
     // Validate date format
     if (!/^\d{4}-\d{2}-\d{2}$/.test(signUpDate) || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
@@ -245,11 +262,11 @@ async function processPlayersRow(
       }
     }
     
-    // Helper function to parse numeric values safely
-    const parseNumeric = (value: string, defaultValue: number = 0): number => {
+    // Helper function to parse numeric values safely (return as string for decimal fields)
+    const parseNumeric = (value: string, defaultValue: string = '0'): string => {
       if (!value || value.trim() === '') return defaultValue;
       const parsed = parseFloat(value);
-      return isNaN(parsed) ? defaultValue : parsed;
+      return isNaN(parsed) ? defaultValue : parsed.toString();
     };
     
     const parseInt = (value: string, defaultValue: number = 0): number => {
@@ -260,7 +277,7 @@ async function processPlayersRow(
     
     // Parse first deposit date if present
     const firstDepositDateRaw = row[getHeaderIndex('first deposit date')] || '';
-    const firstDepositDate = firstDepositDateRaw ? firstDepositDateRaw.split(' ')[0] : null;
+    const firstDepositDate = firstDepositDateRaw ? (firstDepositDateRaw.split(' ')[0] || null) : null;
     
     const rowObj = {
       playerId: parseInt(row[getHeaderIndex('player id')] || '0'),
@@ -316,12 +333,12 @@ async function processPlayersRow(
     // Use upsert logic for players (based on player ID and date)
     try {
       // Log the data being processed for debugging (first few rows only)
-      if (chunkIndex === 0 && chunk.indexOf(rowData) < 3) {
+      if (process.env.NODE_ENV === 'development' && chunkIndex === 0 && chunk.indexOf(rowData) < 3) {
         console.log(`Processing players row data:`, JSON.stringify(rowObj, null, 2));
       }
       
       // Additional validation logging for debugging
-      if (stats.errors < 10) { // Log first 10 errors for debugging
+      if (process.env.NODE_ENV === 'development' && stats.errors < 10) { // Log first 10 errors for debugging
         console.log(`Row validation - Player ID: ${rowObj.playerId}, Partner ID: ${rowObj.partnerId}, Sign up date: ${rowObj.signUpDate}`);
       }
       

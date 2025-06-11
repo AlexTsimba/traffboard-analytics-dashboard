@@ -2,6 +2,9 @@ import { databaseService } from "@traffboard/database";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
+// Enable ISR with 30-minute revalidation for conversions data
+export const revalidate = 1800; // 30 minutes in seconds
+
 export default async function ConversionsPage() {
   const [aggregates, recentConversions] = await Promise.all([
     databaseService.conversions.getAggregates(),

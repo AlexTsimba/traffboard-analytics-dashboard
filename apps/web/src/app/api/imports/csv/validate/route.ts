@@ -92,21 +92,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'CSV must have header and at least one data row' }, { status: 400 });
     }
 
-    // Define expected headers for different CSV types
+    // Define expected headers for conversions CSV
     const conversionsHeaders = [
       'date', 'foreign_partner_id', 'foreign_campaign_id', 'foreign_landing_id',
       'os_family', 'country', 'all_clicks', 'unique_clicks', 
       'registrations_count', 'ftd_count'
-    ];
-
-    const playersHeaders = [
-      'player id', 'original player id', 'sign up date', 'first deposit date', 'date',
-      'partner id', 'company name', 'partners email', 'partner tags', 'campaign id',
-      'campaign name', 'promo id', 'promo code', 'player country', 'tag: clickid',
-      'tag: os', 'tag: source', 'tag: sub2', 'prequalified', 'duplicate',
-      'self-excluded', 'disabled', 'currency', 'ftd count', 'ftd sum',
-      'deposits count', 'deposits sum', 'cashouts count', 'cashouts sum',
-      'casino bets count', 'casino real ngr', 'fixed per player', 'casino bets sum'
     ];
     
     const headers = lines[0]?.split(',').map(h => h.trim().toLowerCase()) || [];
