@@ -10,6 +10,7 @@ import { revalidatePath, revalidateTag } from 'next/cache'
 import type { ActionState } from './types'
 import { metricViewSchema } from './types'
 import { saveUserPreferences, getCurrentUserId } from './utils'
+import { debug, error } from '@/lib/logger'
 
 /**
  * Server Action for updating metric view settings
@@ -48,8 +49,8 @@ export async function updateMetricViewAction(
       data: { settings: validatedSettings.data, updated: true },
       message: 'Metric view updated successfully!',
     }
-  } catch (error) {
-    console.error('Metric view update error:', error)
+  } catch (err) {
+    error('Metric view update error', {}, err instanceof Error ? err : new Error(String(err)))
     return {
       message: 'Failed to update metric view. Please try again.',
     }
@@ -86,8 +87,8 @@ export async function saveDashboardLayoutAction(
       data: { layout: layoutConfig, saved: true },
       message: 'Dashboard layout saved successfully!',
     }
-  } catch (error) {
-    console.error('Layout save error:', error)
+  } catch (err) {
+    error('Layout save error', {}, err instanceof Error ? err : new Error(String(err)))
     return {
       message: 'Failed to save dashboard layout. Please try again.',
     }
@@ -127,14 +128,14 @@ export async function createMetricAlertAction(
     // This would save to metric_alerts table with:
     // - userId, alertId, metricName, threshold, condition, frequency, email
     // - isActive, createdAt, triggeredAt, etc.
-    console.log('Creating metric alert:', { ...alertConfig, alertId, userId })
+    debug('Creating metric alert', { ...alertConfig, alertId, userId })
 
     return {
       data: { alertId, created: true },
       message: 'Metric alert created successfully!',
     }
-  } catch (error) {
-    console.error('Alert creation error:', error)
+  } catch (err) {
+    error('Alert creation error', {}, err instanceof Error ? err : new Error(String(err)))
     return {
       message: 'Failed to create metric alert. Please try again.',
     }

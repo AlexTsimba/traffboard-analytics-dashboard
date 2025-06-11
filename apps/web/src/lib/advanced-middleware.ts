@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ErrorResponseBuilder, ErrorType } from '@/lib/error-handler';
 import { CacheMonitor } from '@/lib/cache';
+import { debug, info, warn, error } from '@/lib/logger';
 
 /**
  * Advanced middleware utilities for enhanced security and performance
@@ -45,11 +45,8 @@ const SUSPICIOUS_PATTERNS = {
   ],
 };
 
-// Geolocation-based restrictions (if needed)
-const RESTRICTED_COUNTRIES = [
-  // Add country codes if geographical restrictions are needed
-  // 'CN', 'RU', etc.
-];
+// Geolocation-based restrictions can be added here if needed
+// const RESTRICTED_COUNTRIES = ['CN', 'RU', etc.];
 
 // Request monitoring store
 interface RequestMetrics {
@@ -352,11 +349,11 @@ export function logRequest(
   
   // Log based on status
   if (response?.status && response.status >= 500) {
-    console.error('🔴 Server error:', logData);
+    error('Server error occurred', logData);
   } else if (response?.status && response.status >= 400) {
-    console.warn('🟡 Client error:', logData);
+    warn('Client error occurred', logData);
   } else {
-    console.info('🔵 Request:', logData);
+    debug('Request processed', logData);
   }
 }
 
@@ -434,7 +431,11 @@ export function runMaintenanceTasks(): void {
     CacheMonitor.reset();
   }
   
-  console.log('🧹 Maintenance tasks completed');
+  debug('Maintenance tasks completed', {
+    cacheHits: cacheStats.hits,
+    cacheMisses: cacheStats.misses,
+    cacheReset: cacheStats.hits + cacheStats.misses > 10000
+  });
 }
 
 // Schedule maintenance tasks every hour

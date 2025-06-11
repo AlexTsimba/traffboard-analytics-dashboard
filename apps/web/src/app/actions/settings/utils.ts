@@ -20,13 +20,11 @@ export async function withErrorHandling<T>(
     errorMessage?: string
   } = {}
 ): Promise<ActionState> {
-  try {
-    const {
-      requireUser = true,
-      revalidatePaths = ['/dashboard/settings'],
-      errorMessage = 'Operation failed. Please try again.'
-    } = options
+  const requireUser = options.requireUser ?? true
+  const revalidatePaths = options.revalidatePaths ?? ['/dashboard/settings']
+  const errorMessage = options.errorMessage ?? 'Operation failed. Please try again.'
 
+  try {
     // Get current user if required
     let currentUser: UserProfile | null = null
     if (requireUser) {

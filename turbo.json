@@ -7,6 +7,24 @@
       "outputs": [".next/**", "dist/**", "lib/**", "build/**", "!.next/cache/**"],
       "env": ["NODE_ENV", "DATABASE_URL", "NEXTAUTH_SECRET", "NEXTAUTH_URL"]
     },
+    "@traffboard/database#build": {
+      "outputs": []
+    },
+    "@traffboard/normalization#build": {
+      "outputs": []
+    },
+    "@traffboard/auth#build": {
+      "outputs": []
+    },
+    "@traffboard/types#build": {
+      "outputs": []
+    },
+    "@traffboard/ui#build": {
+      "outputs": []
+    },
+    "@traffboard/partners#build": {
+      "outputs": []
+    },
     "dev": {
       "cache": false,
       "persistent": true

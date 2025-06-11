@@ -1,4 +1,4 @@
-import { pgTable, text, boolean, timestamp, serial, pgEnum } from 'drizzle-orm/pg-core';
+import { pgTable, boolean, timestamp, serial, pgEnum } from 'drizzle-orm/pg-core';
 import { users } from './users';
 
 export const dateRangeEnum = pgEnum('date_range', ['7d', '30d', '90d', '1y']);

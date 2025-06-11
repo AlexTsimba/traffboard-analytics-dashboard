@@ -28,6 +28,10 @@ export class UserProfilesRepository {
   }
 
   async upsert(data: NewUserProfile): Promise<UserProfile> {
+    if (!data.userId) {
+      throw new Error('userId is required for user profile');
+    }
+    
     const existing = await this.findByUserId(data.userId);
     if (existing) {
       await this.update(data.userId, data);

@@ -4,6 +4,8 @@
  * Extracted from monolithic dashboard-actions.ts
  */
 
+import { debug } from '@/lib/logger';
+
 /**
  * Validates date range constraints
  * @param from - Start date string
@@ -42,7 +44,7 @@ export async function saveUserPreferences(
   // TODO: Replace with actual database operation using @traffboard/database
   // This would save to user preferences table
   // For now, just simulate the operation
-  console.log('Saving user preferences:', preferences)
+  debug('Saving user preferences', { preferences })
 }
 
 /**

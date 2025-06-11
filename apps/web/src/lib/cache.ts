@@ -1,5 +1,6 @@
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
+import { cache } from './logger';
 
 /**
  * Advanced cache management utilities for analytics dashboard
@@ -96,7 +97,7 @@ export class CacheConfigBuilder {
     const { userSpecific, partnerSpecific, timeRange, freshness = 'standard' } = options;
     
     const baseConfig = CACHE_PROFILES[freshness.toUpperCase() as keyof typeof CACHE_PROFILES];
-    const tags = [...baseConfig.tags];
+    const tags: string[] = [...baseConfig.tags];
     
     // Add route-specific tags
     switch (route) {
@@ -236,9 +237,9 @@ export class CacheInvalidationManager {
       revalidatePath(CACHE_PATHS.DASHBOARD);
       revalidatePath(CACHE_PATHS.OVERVIEW);
       
-      console.log(`✅ Cache invalidated after ${dataType} import (${importSize} records)`);
+      cache('invalidate', dataType, { importSize, tags });
     } catch (error) {
-      console.error('❌ Cache invalidation failed:', error);
+      cache('error', 'invalidateAfterImport', { error: error instanceof Error ? error.message : 'Unknown error' });
     }
   }
 
@@ -251,9 +252,9 @@ export class CacheInvalidationManager {
       revalidateTag(CACHE_TAGS.USER_FILTERS);
       revalidatePath(CACHE_PATHS.DASHBOARD);
       
-      console.log(`✅ User cache invalidated for user ${userId}`);
+      cache('invalidate', 'user-cache', { userId });
     } catch (error) {
-      console.error('❌ User cache invalidation failed:', error);
+      cache('error', 'invalidateUserCache', { error: error instanceof Error ? error.message : 'Unknown error' });
     }
   }
 
@@ -266,9 +267,9 @@ export class CacheInvalidationManager {
       revalidateTag(CACHE_TAGS.CAMPAIGN_DATA);
       revalidateTag(CACHE_TAGS.ANALYTICS_OVERVIEW);
       
-      console.log(`✅ Partner cache invalidated for partner ${partnerId}`);
+      cache('invalidate', 'partner-cache', { partnerId });
     } catch (error) {
-      console.error('❌ Partner cache invalidation failed:', error);
+      cache('error', 'invalidatePartnerCache', { error: error instanceof Error ? error.message : 'Unknown error' });
     }
   }
 
@@ -288,9 +289,9 @@ export class CacheInvalidationManager {
         revalidatePath(path);
       }
 
-      console.log('✅ Critical cache paths warmed');
+      cache('set', 'critical-paths-warmed');
     } catch (error) {
-      console.error('❌ Cache warming failed:', error);
+      cache('error', 'warmCriticalPaths', { error: error instanceof Error ? error.message : 'Unknown error' });
     }
   }
 
@@ -309,9 +310,9 @@ export class CacheInvalidationManager {
         revalidatePath(path);
       });
 
-      console.log('🚨 Emergency cache purge completed');
+      cache('clear', 'emergency-purge-completed');
     } catch (error) {
-      console.error('❌ Emergency cache purge failed:', error);
+      cache('error', 'emergencyPurge', { error: error instanceof Error ? error.message : 'Unknown error' });
     }
   }
 }
@@ -404,9 +405,9 @@ export const revalidateAnalyticsOverview = async (): Promise<void> => {
   try {
     revalidateTag(CACHE_TAGS.ANALYTICS_OVERVIEW);
     revalidatePath(CACHE_PATHS.DASHBOARD);
-    console.log('✅ Revalidated analytics overview cache');
+    cache('invalidate', 'analytics-overview');
   } catch (error) {
-    console.error('❌ Failed to revalidate analytics overview:', error);
+    cache('error', 'revalidateAnalyticsOverview', { error: error instanceof Error ? error.message : 'Unknown error' });
   }
 };
 
@@ -414,9 +415,9 @@ export const revalidateConversions = async (): Promise<void> => {
   try {
     revalidateTag(CACHE_TAGS.CONVERSIONS);
     revalidatePath(CACHE_PATHS.CONVERSIONS);
-    console.log('✅ Revalidated conversions cache');
+    cache('invalidate', 'conversions');
   } catch (error) {
-    console.error('❌ Failed to revalidate conversions:', error);
+    cache('error', 'revalidateConversions', { error: error instanceof Error ? error.message : 'Unknown error' });
   }
 };
 
@@ -424,9 +425,9 @@ export const revalidatePlayers = async (): Promise<void> => {
   try {
     revalidateTag(CACHE_TAGS.PLAYERS);
     revalidatePath(CACHE_PATHS.PLAYERS);
-    console.log('✅ Revalidated players cache');
+    cache('invalidate', 'players');
   } catch (error) {
-    console.error('❌ Failed to revalidate players:', error);
+    cache('error', 'revalidatePlayers', { error: error instanceof Error ? error.message : 'Unknown error' });
   }
 };
 
@@ -441,9 +442,9 @@ export const revalidateAllDashboard = async (): Promise<void> => {
     revalidateTag(CACHE_TAGS.DASHBOARD);
     revalidatePath(CACHE_PATHS.DASHBOARD);
     
-    console.log('✅ Revalidated all dashboard cache');
+    cache('invalidate', 'all-dashboard');
   } catch (error) {
-    console.error('❌ Failed to revalidate dashboard:', error);
+    cache('error', 'revalidateAllDashboard', { error: error instanceof Error ? error.message : 'Unknown error' });
   }
 };
 

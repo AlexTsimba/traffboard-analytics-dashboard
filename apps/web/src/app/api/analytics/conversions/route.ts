@@ -1,9 +1,9 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { databaseService } from '@traffboard/database';
 import { conversionsQuerySchema } from '@/lib/validations/analytics';
 import { createTypedHandler } from '@/lib/type-safety';
-import { withCache, CacheConfigBuilder } from '@/lib/cache';
+import { withCache } from '@/lib/cache';
 import { ErrorResponseBuilder } from '@/lib/error-handler';
 import { buildRequestContext, logRequest } from '@/lib/advanced-middleware';
 
@@ -43,7 +43,7 @@ const conversionsResponseSchema = z.object({
 const getConversionsHandler = createTypedHandler({
   inputSchema: conversionsQuerySchema,
   outputSchema: conversionsResponseSchema,
-  handler: async ({ data: query, request, userId, userRole }) => {
+  handler: async ({ data: query, request, userId, userRole: _userRole }) => {
     const startTime = Date.now();
     const context = buildRequestContext(request);
     
@@ -87,7 +87,19 @@ const getConversionsHandler = createTypedHandler({
       const hasMore = page < totalPages;
 
       const result = {
-        data: conversions,
+        data: conversions.map(conversion => ({
+          id: conversion.id,
+          date: conversion.date,
+          foreignPartnerId: conversion.foreignPartnerId,
+          foreignCampaignId: conversion.foreignCampaignId,
+          foreignLandingId: conversion.foreignLandingId,
+          osFamily: conversion.osFamily || 'Unknown',
+          country: conversion.country,
+          allClicks: conversion.allClicks || 0,
+          uniqueClicks: conversion.uniqueClicks || 0,
+          registrationsCount: conversion.registrationsCount || 0,
+          ftdCount: conversion.ftdCount || 0,
+        })),
         aggregates,
         pagination: {
           page,
@@ -116,7 +128,14 @@ const getConversionsHandler = createTypedHandler({
 });
 
 // Apply caching to the handler
-export const GET = withCache(getConversionsHandler, {
+export const GET = withCache(async (request: NextRequest) => {
+  const response = await getConversionsHandler(request);
+  return new NextResponse(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers,
+  });
+}, {
   profile: 'STANDARD',
   additionalTags: ['conversions-data'],
   private: false,

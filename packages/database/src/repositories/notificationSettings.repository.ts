@@ -28,6 +28,10 @@ export class NotificationSettingsRepository {
   }
 
   async upsert(data: NewNotificationSettings): Promise<NotificationSettings> {
+    if (!data.userId) {
+      throw new Error('userId is required for notification settings');
+    }
+    
     const existing = await this.findByUserId(data.userId);
     if (existing) {
       await this.update(data.userId, data);

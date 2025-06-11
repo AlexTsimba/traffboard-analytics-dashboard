@@ -15,14 +15,24 @@ vi.mock('next/cache', () => ({
   revalidateTag: vi.fn(),
 }))
 
+// Mock the logger module
+vi.mock('@/lib/logger', () => ({
+  cache: vi.fn(),
+  logger: {
+    cache: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }
+}))
+
 const { revalidatePath, revalidateTag } = await import('next/cache')
+const { cache: cacheLogger } = await import('@/lib/logger')
 
 describe('Cache Management', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    // Clear console logs for testing
-    vi.spyOn(console, 'log').mockImplementation(() => {})
-    vi.spyOn(console, 'error').mockImplementation(() => {})
   })
 
   describe('Cache Configuration', () => {
@@ -80,7 +90,7 @@ describe('Cache Management', () => {
 
       expect(revalidateTag).toHaveBeenCalledWith(CACHE_TAGS.ANALYTICS_OVERVIEW)
       expect(revalidatePath).toHaveBeenCalledWith(CACHE_PATHS.DASHBOARD)
-      expect(console.log).toHaveBeenCalledWith('✅ Revalidated analytics overview cache')
+      expect(cacheLogger).toHaveBeenCalledWith('invalidate', 'analytics-overview')
     })
 
     test('should revalidate conversions cache', async () => {
@@ -88,7 +98,7 @@ describe('Cache Management', () => {
 
       expect(revalidateTag).toHaveBeenCalledWith(CACHE_TAGS.CONVERSIONS)
       expect(revalidatePath).toHaveBeenCalledWith(CACHE_PATHS.CONVERSIONS)
-      expect(console.log).toHaveBeenCalledWith('✅ Revalidated conversions cache')
+      expect(cacheLogger).toHaveBeenCalledWith('invalidate', 'conversions')
     })
 
     test('should revalidate players cache', async () => {
@@ -96,7 +106,7 @@ describe('Cache Management', () => {
 
       expect(revalidateTag).toHaveBeenCalledWith(CACHE_TAGS.PLAYERS)
       expect(revalidatePath).toHaveBeenCalledWith(CACHE_PATHS.PLAYERS)
-      expect(console.log).toHaveBeenCalledWith('✅ Revalidated players cache')
+      expect(cacheLogger).toHaveBeenCalledWith('invalidate', 'players')
     })
 
     test('should handle revalidation errors gracefully', async () => {
@@ -107,7 +117,8 @@ describe('Cache Management', () => {
 
       await revalidateAnalyticsOverview()
 
-      expect(console.error).toHaveBeenCalledWith('❌ Failed to revalidate analytics overview:', mockError)
+      expect(cacheLogger).toHaveBeenCalledWith('error', 'revalidateAnalyticsOverview', 
+        { error: mockError.message })
     })
   })
 
@@ -126,7 +137,7 @@ describe('Cache Management', () => {
       expect(revalidatePath).toHaveBeenCalledWith(CACHE_PATHS.CONVERSIONS)
       expect(revalidatePath).toHaveBeenCalledWith(CACHE_PATHS.PLAYERS)
 
-      expect(console.log).toHaveBeenCalledWith('✅ Revalidated all dashboard cache')
+      expect(cacheLogger).toHaveBeenCalledWith('invalidate', 'all-dashboard')
     })
 
     test('should handle dashboard revalidation errors', async () => {
@@ -137,7 +148,8 @@ describe('Cache Management', () => {
 
       await revalidateAllDashboard()
 
-      expect(console.error).toHaveBeenCalledWith('❌ Failed to revalidate dashboard:', mockError)
+      expect(cacheLogger).toHaveBeenCalledWith('error', 'revalidateAllDashboard', 
+        { error: mockError.message })
     })
   })
 

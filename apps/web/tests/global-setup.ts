@@ -9,7 +9,7 @@ async function globalSetup(config: FullConfig) {
   console.log('🧪 Setting up global test environment...');
   
   // Wait for the application to be ready
-  const baseURL = config.projects[0].use.baseURL || 'http://localhost:3002';
+  const baseURL = config.projects?.[0]?.use?.baseURL || 'http://localhost:3002';
   
   // Wait for health check
   let retries = 0;

@@ -166,10 +166,10 @@ export const RateLimitValidation = {
    * Validate that an action hasn't been performed too frequently
    */
   checkActionFrequency: (
-    userId: string,
-    action: string,
-    maxAttempts: number,
-    windowMs: number
+    _userId: string,
+    _action: string,
+    _maxAttempts: number,
+    _windowMs: number
   ): boolean => {
     // In production, this would use Redis or a database
     // For now, return true as placeholder
@@ -275,9 +275,19 @@ export class SecureFormValidator {
       const result = this.schema.safeParse(data)
 
       if (!result.success) {
+        // Transform fieldErrors to ensure all values are string arrays
+        const fieldErrors = result.error.flatten().fieldErrors;
+        const processedErrors: Record<string, string[]> = {};
+        
+        Object.entries(fieldErrors).forEach(([key, value]) => {
+          if (value && Array.isArray(value)) {
+            processedErrors[key] = value;
+          }
+        });
+
         return {
           success: false,
-          errors: result.error.flatten().fieldErrors,
+          errors: processedErrors,
           message: 'Validation failed. Please check your inputs.',
         }
       }
@@ -303,7 +313,7 @@ export function createSecureAction<T>(
   validator: SecureFormValidator,
   handler: (data: T, context: any) => Promise<any>
 ) {
-  return async (prevState: any, formData: FormData) => {
+  return async (_prevState: any, formData: FormData) => {
     // Extract context from headers (set by middleware)
     const userId = ''; // Would get from request headers
     const userAgent = ''; // Would get from request headers

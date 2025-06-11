@@ -1,6 +1,6 @@
 'use client'
 
-import { useOptimistic, useTransition, startTransition } from 'react'
+import { useOptimistic, useTransition } from 'react'
 import { useCallback } from 'react'
 
 export interface OptimisticState<T> {
@@ -194,7 +194,7 @@ export function useOptimisticForm<T, A>(
   const [isPending, startTransition] = useTransition()
 
   const submitForm = useCallback(
-    (action: (prevState: A, formData: FormData) => Promise<A>, formData: FormData) => {
+    (_action: (prevState: A, formData: FormData) => Promise<A>, formData: FormData) => {
       // Apply optimistic update
       updateOptimisticData(formData)
 

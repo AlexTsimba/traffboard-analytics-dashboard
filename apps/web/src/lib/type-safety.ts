@@ -394,13 +394,25 @@ export class TypedQueryBuilder<T extends Record<string, any>> {
         case 'ne':
           return itemValue !== value;
         case 'gt':
-          return itemValue > value;
+          return this.isComparable(itemValue) && 
+                 this.isComparable(value) && 
+                 !Array.isArray(value) && 
+                 itemValue > value;
         case 'gte':
-          return itemValue >= value;
+          return this.isComparable(itemValue) && 
+                 this.isComparable(value) && 
+                 !Array.isArray(value) && 
+                 itemValue >= value;
         case 'lt':
-          return itemValue < value;
+          return this.isComparable(itemValue) && 
+                 this.isComparable(value) && 
+                 !Array.isArray(value) && 
+                 itemValue < value;
         case 'lte':
-          return itemValue <= value;
+          return this.isComparable(itemValue) && 
+                 this.isComparable(value) && 
+                 !Array.isArray(value) && 
+                 itemValue <= value;
         case 'in':
           return Array.isArray(value) && value.includes(itemValue);
         case 'like':
@@ -413,6 +425,12 @@ export class TypedQueryBuilder<T extends Record<string, any>> {
     });
     
     return this;
+  }
+
+  private isComparable(value: unknown): value is number | string | Date {
+    return typeof value === 'number' || 
+           typeof value === 'string' || 
+           value instanceof Date;
   }
 
   orderBy(key: keyof T, order: 'asc' | 'desc' = 'asc'): this {

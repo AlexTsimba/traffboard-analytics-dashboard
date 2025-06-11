@@ -3,6 +3,7 @@
 import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
 import bcrypt from 'bcryptjs'
+import { debug, error } from '@/lib/logger'
 
 // Validation schemas
 const userProfileSchema = z.object({
@@ -110,7 +111,7 @@ async function updateUserProfile(
   updates: Partial<UserProfile>
 ): Promise<void> {
   // This would update user in database
-  console.log('Updating user profile:', { userId, updates })
+  debug('Updating user profile', { userId, updates })
 }
 
 async function updateUserPassword(
@@ -118,7 +119,7 @@ async function updateUserPassword(
   _hashedPassword: string
 ): Promise<void> {
   // This would update password in database
-  console.log('Updating user password:', { userId })
+  debug('Updating user password', { userId })
 }
 
 async function updateNotificationSettings(
@@ -126,7 +127,7 @@ async function updateNotificationSettings(
   settings: NotificationSettings
 ): Promise<void> {
   // This would update notification settings in database
-  console.log('Updating notification settings:', { userId, settings })
+  debug('Updating notification settings', { userId, settings })
 }
 
 async function updateDashboardPreferences(
@@ -134,7 +135,7 @@ async function updateDashboardPreferences(
   preferences: DashboardPreferences
 ): Promise<void> {
   // This would update dashboard preferences in database
-  console.log('Updating dashboard preferences:', { userId, preferences })
+  debug('Updating dashboard preferences', { userId, preferences })
 }
 
 async function generateAPIKey(
@@ -164,7 +165,7 @@ async function generateAPIKey(
 
 async function revokeAPIKey(userId: string, keyId: string): Promise<void> {
   // This would revoke API key in database
-  console.log('Revoking API key:', { userId, keyId })
+  debug('Revoking API key', { userId, keyId })
 }
 
 /**
@@ -210,8 +211,8 @@ export async function updateUserProfileAction(
       data: { profile: validatedFields.data, updated: true },
       message: 'Profile updated successfully!',
     }
-  } catch (error) {
-    console.error('Profile update error:', error)
+  } catch (err) {
+    error('Profile update error', {}, err instanceof Error ? err : new Error(String(err)))
     return {
       message: 'Failed to update profile. Please try again.',
     }
@@ -271,8 +272,8 @@ export async function changePasswordAction(
       data: { passwordChanged: true },
       message: 'Password changed successfully!',
     }
-  } catch (error) {
-    console.error('Password change error:', error)
+  } catch (err) {
+    error('Password change error', {}, err instanceof Error ? err : new Error(String(err)))
     return {
       message: 'Failed to change password. Please try again.',
     }
@@ -324,8 +325,8 @@ export async function updateNotificationSettingsAction(
       data: { settings: validatedFields.data, updated: true },
       message: 'Notification settings updated successfully!',
     }
-  } catch (error) {
-    console.error('Notification settings update error:', error)
+  } catch (err) {
+    error('Notification settings update error', {}, err instanceof Error ? err : new Error(String(err)))
     return {
       message: 'Failed to update notification settings. Please try again.',
     }
@@ -378,8 +379,8 @@ export async function updateDashboardPreferencesAction(
       data: { preferences: validatedFields.data, updated: true },
       message: 'Dashboard preferences updated successfully!',
     }
-  } catch (error) {
-    console.error('Dashboard preferences update error:', error)
+  } catch (err) {
+    error('Dashboard preferences update error', {}, err instanceof Error ? err : new Error(String(err)))
     return {
       message: 'Failed to update dashboard preferences. Please try again.',
     }
@@ -433,8 +434,8 @@ export async function generateAPIKeyAction(
       data: { apiKey, generated: true },
       message: 'API key generated successfully! Make sure to copy it now - you won\'t see it again.',
     }
-  } catch (error) {
-    console.error('API key generation error:', error)
+  } catch (err) {
+    error('API key generation error', {}, err instanceof Error ? err : new Error(String(err)))
     return {
       message: 'Failed to generate API key. Please try again.',
     }
@@ -475,8 +476,8 @@ export async function revokeAPIKeyAction(
       data: { keyId, revoked: true },
       message: 'API key revoked successfully!',
     }
-  } catch (error) {
-    console.error('API key revocation error:', error)
+  } catch (err) {
+    error('API key revocation error', {}, err instanceof Error ? err : new Error(String(err)))
     return {
       message: 'Failed to revoke API key. Please try again.',
     }
@@ -524,7 +525,7 @@ export async function deleteAccountAction(
     }
 
     // Delete user account (this would be implemented with actual database deletion)
-    console.log('Deleting user account:', currentUser.id)
+    debug('Deleting user account', { userId: currentUser.id })
 
     // Note: In a real implementation, you would:
     // 1. Soft delete or hard delete the user
@@ -536,8 +537,8 @@ export async function deleteAccountAction(
       data: { deleted: true },
       message: 'Account deletion initiated. You will be logged out shortly.',
     }
-  } catch (error) {
-    console.error('Account deletion error:', error)
+  } catch (err) {
+    error('Account deletion error', {}, err instanceof Error ? err : new Error(String(err)))
     return {
       message: 'Failed to delete account. Please try again.',
     }
@@ -574,8 +575,8 @@ export async function exportUserDataAction(): Promise<ActionState> {
       },
       message: 'Data export requested! You will receive an email when ready.',
     }
-  } catch (error) {
-    console.error('Data export error:', error)
+  } catch (err) {
+    error('Data export error', {}, err instanceof Error ? err : new Error(String(err)))
     return {
       message: 'Failed to export user data. Please try again.',
     }

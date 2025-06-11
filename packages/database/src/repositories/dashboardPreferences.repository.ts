@@ -28,6 +28,10 @@ export class DashboardPreferencesRepository {
   }
 
   async upsert(data: NewDashboardPreferences): Promise<DashboardPreferences> {
+    if (!data.userId) {
+      throw new Error('userId is required for dashboard preferences');
+    }
+    
     const existing = await this.findByUserId(data.userId);
     if (existing) {
       await this.update(data.userId, data);

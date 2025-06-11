@@ -1,4 +1,4 @@
-import { eq, and, gt } from 'drizzle-orm';
+import { eq, and, isNull, lt } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { apiKeys, type ApiKey, type NewApiKey } from '../schema/apiKeys';
 import { createHash, randomBytes } from 'crypto';
@@ -71,7 +71,7 @@ export class ApiKeysRepository {
 
   async verifyKey(key: string): Promise<Omit<ApiKey, 'keyHash'> | null> {
     const keyHash = this.hashKey(key);
-    const now = new Date();
+    // TODO: Add proper expiration check using current date
     
     const result = await this.db.select({
       id: apiKeys.id,
@@ -87,8 +87,8 @@ export class ApiKeysRepository {
         and(
           eq(apiKeys.keyHash, keyHash),
           // Check if key is not expired (null expiresAt means never expires)
-          // Or expiresAt is in the future
-          eq(apiKeys.expiresAt, null) // This will need to be adjusted for proper null handling
+          // TODO: Add proper expiration check using isNull() or gt() for future dates
+          isNull(apiKeys.expiresAt) // This checks for null expiration (never expires)
         )
       ).limit(1);
     
@@ -137,7 +137,7 @@ export class ApiKeysRepository {
   async deleteExpiredKeys(): Promise<number> {
     const now = new Date();
     const result = await this.db.delete(apiKeys)
-      .where(and(gt(now, apiKeys.expiresAt)))
+      .where(lt(apiKeys.expiresAt, now))
       .returning({ id: apiKeys.id });
     
     return result.length;

@@ -8,6 +8,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     globals: true,
+    setupFiles: ['./src/tests/setup.ts'],
     include: ['src/**/*.{test,spec}.{ts,tsx}'], // Only include tests in src/
     exclude: [
       'node_modules/**',
