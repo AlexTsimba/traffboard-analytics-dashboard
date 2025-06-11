@@ -4,3 +4,7 @@ export * from './partnerSettings';
 export * from './players';
 export * from './trafficReports';
 export * from './users';
+export * from './userProfiles';
+export * from './notificationSettings';
+export * from './dashboardPreferences';
+export * from './apiKeys';

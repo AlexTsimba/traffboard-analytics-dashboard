@@ -63,9 +63,38 @@ export class UsersRepository {
     return isValid ? user : null;
   }
 
+  async verifyPassword(userId: number, password: string): Promise<boolean> {
+    const user = await this.findById(userId);
+    if (!user) return false;
+    return await verifyPassword(password, user.passwordHash);
+  }
+
+  async updatePassword(userId: number, newPassword: string): Promise<void> {
+    const passwordHash = await hashPassword(newPassword);
+    await this.db.update(users)
+      .set({ passwordHash, updatedAt: new Date() })
+      .where(eq(users.id, userId));
+  }
+
+  async updateEmail(userId: number, newEmail: string): Promise<void> {
+    await this.db.update(users)
+      .set({ email: newEmail, updatedAt: new Date() })
+      .where(eq(users.id, userId));
+  }
+
   async updateTwoFactor(userId: number, secret: string, enabled: boolean): Promise<void> {
     await this.db.update(users)
       .set({ twoFactorSecret: secret, twoFactorEnabled: enabled, updatedAt: new Date() })
       .where(eq(users.id, userId));
+  }
+
+  async updateVerificationStatus(userId: number, isVerified: boolean): Promise<void> {
+    await this.db.update(users)
+      .set({ isVerified, updatedAt: new Date() })
+      .where(eq(users.id, userId));
+  }
+
+  async delete(userId: number): Promise<void> {
+    await this.db.delete(users).where(eq(users.id, userId));
   }
 }

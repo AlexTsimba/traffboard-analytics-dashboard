@@ -15,6 +15,13 @@
       "when": 1749418715390,
       "tag": "0001_bright_human_robot",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1749649386742,
+      "tag": "0002_third_lord_tyger",
+      "breakpoints": true
     }
   ]
 }

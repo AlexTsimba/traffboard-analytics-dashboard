@@ -1,17 +1,34 @@
 import { db } from './db';
-import { ConversionsRepository, PlayersRepository, UsersRepository, SessionsRepository } from './repositories';
+import { 
+  ConversionsRepository, 
+  PlayersRepository, 
+  UsersRepository, 
+  SessionsRepository,
+  UserProfilesRepository,
+  NotificationSettingsRepository,
+  DashboardPreferencesRepository,
+  ApiKeysRepository
+} from './repositories';
 
 export class DatabaseService {
   public readonly conversions: ConversionsRepository;
   public readonly players: PlayersRepository;
   public readonly users: UsersRepository;
   public readonly sessions: SessionsRepository;
+  public readonly userProfiles: UserProfilesRepository;
+  public readonly notificationSettings: NotificationSettingsRepository;
+  public readonly dashboardPreferences: DashboardPreferencesRepository;
+  public readonly apiKeys: ApiKeysRepository;
 
   constructor() {
     this.conversions = new ConversionsRepository(db);
     this.players = new PlayersRepository(db);
     this.users = new UsersRepository(db);
     this.sessions = new SessionsRepository(db);
+    this.userProfiles = new UserProfilesRepository(db);
+    this.notificationSettings = new NotificationSettingsRepository(db);
+    this.dashboardPreferences = new DashboardPreferencesRepository(db);
+    this.apiKeys = new ApiKeysRepository(db);
   }
 
   async testConnection(): Promise<boolean> {
