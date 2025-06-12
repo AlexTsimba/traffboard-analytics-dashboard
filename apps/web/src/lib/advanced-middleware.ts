@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CacheMonitor } from '@/lib/cache';
-import { debug, info, warn, error } from '@/lib/logger';
+import { debug, warn, error } from '@/lib/logger';
 
 /**
  * Advanced middleware utilities for enhanced security and performance
