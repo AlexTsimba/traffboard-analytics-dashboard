@@ -8,7 +8,7 @@
     "type-check": "echo 'Types package - no type check needed'"
   },
   "dependencies": {
-    "zod": "^3.23.8"
+    "zod": "^3.25.64"
   },
   "devDependencies": {
     "typescript": "^5.6.3"
