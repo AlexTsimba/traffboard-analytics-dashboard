@@ -65,7 +65,7 @@
     "@types/node": "^22.7.6",
     "@types/pg": "^8.11.10",
     "@types/qrcode": "^1.5.5",
-    "@types/react": "^19.0.0",
+    "@types/react": "^19.1.8",
     "@types/react-dom": "^19.0.0",
     "@typescript-eslint/eslint-plugin": "^8.33.1",
     "@typescript-eslint/parser": "^8.33.1",
